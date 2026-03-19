@@ -56,27 +56,20 @@ target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE ${onnxruntime_SOURCE_DI
 target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
-    juce::juce_audio_basics
+    juce::juce_audio_formats
+    juce::juce_audio_devices
+    juce::juce_events
+    juce::juce_core
+    juce::juce_data_structures
     juce::juce_dsp
     juce::juce_gui_extra
     juce::juce_graphics
-    Assets
     ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib
 )
 
-# Copy DLL to output
+# 6. Post-Build (DLL Copy)
 add_custom_command(TARGET NADA_BOSS_VOCAL_SUITE POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll"
     $<TARGET_FILE_DIR:NADA_BOSS_VOCAL_SUITE>
 )
-
-# 6. Binary Data (LEGENDARY ASSETS)
-juce_add_binary_data(Assets
-    SOURCES
-    Assets/background.png
-    Assets/knob.png
-    Assets/nada_ai_button.png
-)
-
-target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE Assets)
