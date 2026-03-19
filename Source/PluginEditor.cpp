@@ -53,11 +53,21 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     setupSlider(delayMixSlider, "DELAY_MIX", delayMixAtt);
     setupSlider(stereoWidthSlider, "STEREO_WIDTH", stereoWidthAtt);
 
+    // Key / Scale (Legendary Auto-Setup)
+    addAndMakeVisible(keySelector);
+    keySelector.addItemList({"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}, 1);
+    keyAtt = std::make_unique<ComboAttachment>(audioProcessor.apvts, "AUTOTUNE_KEY", keySelector);
+    
+    addAndMakeVisible(scaleSelector);
+    scaleSelector.addItemList({"Major", "Minor"}, 1);
+    scaleAtt = std::make_unique<ComboAttachment>(audioProcessor.apvts, "AUTOTUNE_SCALE", scaleSelector);
+
     // Buttons
     addAndMakeVisible(nadaButton);
     nadaButton.addListener(this);
     nadaButton.setAlpha(0.0f); // Overlay on the golden image
 
+    startTimerHz(30); // 30 FPS UI Update for meters/knobs
     setSize (1000, 750);
 }
 
@@ -89,6 +99,8 @@ void NADAAudioProcessorEditor::resized()
 {
     // Autotune
     autotuneSpeedSlider.setBounds(100, 160, 200, 200);
+    keySelector.setBounds(100, 360, 90, 30);
+    scaleSelector.setBounds(210, 360, 90, 30);
     
     // Dynamics
     fetThreshSlider.setBounds(360, 160, 130, 130);
@@ -107,4 +119,9 @@ void NADAAudioProcessorEditor::resized()
 void NADAAudioProcessorEditor::buttonClicked (juce::Button* button)
 {
     if (button == &nadaButton) audioProcessor.triggerNADAAnalysis();
+}
+
+void NADAAudioProcessorEditor::timerCallback()
+{
+    repaint();
 }
