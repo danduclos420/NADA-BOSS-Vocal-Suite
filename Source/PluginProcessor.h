@@ -40,14 +40,16 @@ private:
     // DSP Modules
     std::unique_ptr<juce::dsp::Compressor<float>> fetCompressor;
     std::unique_ptr<juce::dsp::Compressor<float>> optoCompressor;
+    std::unique_ptr<juce::dsp::Reverb> reverbModule;
+    std::unique_ptr<juce::dsp::DelayLine<float>> delayModule;
     
-    // Autotune Logic
-    float currentPitch = 0.0f;
-    float targetPitch = 0.0f;
+    // Autotune State
+    float lastPitch = 440.0f;
     void applyAutotune (juce::AudioBuffer<float>& buffer);
 
     // AI Helper
     bool isAnalyzing = false;
+    float analysisTimer = 0.0f;
     void performAIAnalysis(juce::AudioBuffer<float>& buffer);
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

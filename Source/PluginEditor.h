@@ -12,7 +12,7 @@ public:
                            juce::Slider& slider) override;
 };
 
-class NADAAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Button::Listener
+class NADAAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Button::Listener, public juce::Timer
 {
 public:
     NADAAudioProcessorEditor (NADAAudioProcessor&);
@@ -21,20 +21,45 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void buttonClicked (juce::Button* button) override;
+    void timerCallback() override;
 
 private:
     NADAAudioProcessor& audioProcessor;
     NADALookAndFeel customLookAndFeel;
 
-    // UI Elements
-    juce::Slider fetSlider;
-    juce::Slider optoSlider;
-    juce::Slider autotuneSlider;
-    juce::TextButton nadaButton { "TRAITEMENT AI (NADA)" };
+    // --- AUTOTUNE SECTION ---
+    juce::Slider autotuneSpeedSlider;
+    juce::ComboBox keySelector;
+    juce::ComboBox scaleSelector;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> fetAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> optoAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> autotuneAttachment;
+    // --- DYNAMICS SECTION ---
+    juce::Slider fetThreshSlider;
+    juce::Slider fetRatioSlider;
+    juce::Slider optoThreshSlider;
+
+    // --- FX SECTION ---
+    juce::Slider reverbMixSlider;
+    juce::Slider delayMixSlider;
+    juce::Slider stereoWidthSlider;
+
+    // --- CENTERPIECE ---
+    juce::TextButton nadaButton { "NADA AI" };
+
+    // --- ATTACHMENTS ---
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    using ComboAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
+
+    std::unique_ptr<SliderAttachment> autotuneSpeedAtt;
+    std::unique_ptr<ComboAttachment> keyAtt;
+    std::unique_ptr<ComboAttachment> scaleAtt;
+    
+    std::unique_ptr<SliderAttachment> fetThreshAtt;
+    std::unique_ptr<SliderAttachment> fetRatioAtt;
+    std::unique_ptr<SliderAttachment> optoThreshAtt;
+    
+    std::unique_ptr<SliderAttachment> reverbMixAtt;
+    std::unique_ptr<SliderAttachment> delayMixAtt;
+    std::unique_ptr<SliderAttachment> stereoWidthAtt;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NADAAudioProcessorEditor)
 };

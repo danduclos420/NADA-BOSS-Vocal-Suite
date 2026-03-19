@@ -3,15 +3,13 @@
 
 NADALookAndFeel::NADALookAndFeel()
 {
-    setColour(juce::Slider::thumbColourId, juce::Colours::red);
-    setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::darkgrey);
 }
 
 void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                                        float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
                                        juce::Slider& slider)
 {
-    auto radius = (float)juce::jmin (width / 2, height / 2) - 4.0f;
+    auto radius = (float)juce::jmin (width / 2, height / 2) - 10.0f;
     auto centreX = (float)x + (float)width  * 0.5f;
     auto centreY = (float)y + (float)height * 0.5f;
     auto rx = centreX - radius;
@@ -19,81 +17,183 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     auto rw = radius * 2.0f;
     auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
 
-    // Dark Metal Base
-    g.setColour (juce::Colour::fromRGB(40, 40, 42));
-    g.fillEllipse (rx, ry, rw, rw);
-    g.setColour (juce::Colours::black.withAlpha(0.5f));
+    // 1. Shadow
+    g.setColour (juce::Colours::black.withAlpha (0.4f));
+    g.fillEllipse (rx + 3, ry + 3, rw, rw);
+
+    // 2. Outer Ring (Shiny Metal)
+    juce::ColourGradient ringGrad (juce::Colour(0xff666666), centreX, ry,
+                                  juce::Colour(0xff222222), centreX, ry + rw, false);
+    g.setGradientFill (ringGrad);
     g.drawEllipse (rx, ry, rw, rw, 2.0f);
 
-    // Led Ring
+    // 3. Main Body (Dark Radial Metal)
+    juce::ColourGradient bodyGrad (juce::Colour(0xff333333), centreX, centreY,
+                                  juce::Colour(0xff111111), centreX + radius, centreY + radius, true);
+    g.setGradientFill (bodyGrad);
+    g.fillEllipse (rx + 1, ry + 1, rw - 2, rw - 2);
+    
+    // 4. LED Indicator
     juce::Path p;
-    p.addCentredArc(centreX, centreY, radius, radius, 0.0f, rotaryStartAngle, angle, true);
+    auto pointerLength = radius * 0.7f;
+    auto pointerThickness = 4.0f;
+    p.addRoundedRectangle (-pointerThickness * 0.5f, -radius, pointerThickness, pointerLength, 1.0f);
+    p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
+    
+    // Glow effect
+    g.setColour (juce::Colours::red.withAlpha (0.4f));
+    g.fillPath (p.createOutline(juce::PathStrokeType(2.0f)));
+    
     g.setColour (juce::Colours::red);
-    g.strokePath(p, juce::PathStrokeType(4.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    // Dial Pointer
-    juce::Path needle;
-    needle.addRectangle(-2, -radius, 4, radius * 0.5f);
-    g.setColour (juce::Colours::white);
-    g.fillPath (needle, juce::AffineTransform::rotation (angle).translated (centreX, centreY));
+    g.fillPath (p);
 }
+
+// --- EDITOR ---
 
 NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setLookAndFeel(&customLookAndFeel);
+    setLookAndFeel (&customLookAndFeel);
 
-    // Setup Sliders
-    fetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    fetSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible(fetSlider);
-    fetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.apvts, "FET_THRESH", fetSlider);
+    // --- AUTOTUNE ---
+    addAndMakeVisible(autotuneSpeedSlider);
+    autotuneSpeedSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    autotuneSpeedSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    autotuneSpeedAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "AUTOTUNE_SPEED", autotuneSpeedSlider);
 
-    optoSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    optoSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible(optoSlider);
-    optoAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.apvts, "OPTO_THRESH", optoSlider);
+    addAndMakeVisible(keySelector);
+    keySelector.addItemList({"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}, 1);
+    keyAtt = std::make_unique<ComboAttachment>(audioProcessor.apvts, "AUTOTUNE_KEY", keySelector);
 
-    autotuneSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    autotuneSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible(autotuneSlider);
-    autotuneAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(p.apvts, "AUTOTUNE", autotuneSlider);
+    addAndMakeVisible(scaleSelector);
+    scaleSelector.addItemList({"Major", "Minor"}, 1);
+    scaleAtt = std::make_unique<ComboAttachment>(audioProcessor.apvts, "AUTOTUNE_SCALE", scaleSelector);
 
-    nadaButton.setButtonText("AI TREATMENT (NADA)");
-    nadaButton.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(180, 20, 20)); // Deep Red
-    nadaButton.addListener(this);
+    // --- DYNAMICS ---
+    addAndMakeVisible(fetThreshSlider);
+    fetThreshSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    fetThreshAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "FET_THRESH", fetThreshSlider);
+
+    addAndMakeVisible(fetRatioSlider);
+    fetRatioSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    fetRatioAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "FET_RATIO", fetRatioSlider);
+
+    addAndMakeVisible(optoThreshSlider);
+    optoThreshSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    optoThreshAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "OPTO_THRESH", optoThreshSlider);
+
+    // --- FX ---
+    addAndMakeVisible(reverbMixSlider);
+    reverbMixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    reverbMixAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "REVERB_MIX", reverbMixSlider);
+
+    addAndMakeVisible(delayMixSlider);
+    delayMixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    delayMixAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "DELAY_MIX", delayMixSlider);
+
+    addAndMakeVisible(stereoWidthSlider);
+    stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    stereoWidthAtt = std::make_unique<SliderAttachment>(audioProcessor.apvts, "STEREO_WIDTH", stereoWidthSlider);
+
+    // --- CENTERPIECE ---
     addAndMakeVisible(nadaButton);
+    nadaButton.addListener(this);
 
-    setSize (600, 450);
+    setSize (1000, 750);
+    startTimerHz(30);
 }
 
-NADAAudioProcessorEditor::~NADAAudioProcessorEditor() { setLookAndFeel(nullptr); }
+NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
+{
+    setLookAndFeel (nullptr);
+}
+
+void NADAAudioProcessorEditor::timerCallback()
+{
+    repaint();
+}
 
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Background: Dark Metal
-    g.fillAll (juce::Colour::fromRGB(25, 25, 28));
+    // --- BACKGROUND: BRUSHED DARK METAL ---
+    g.fillAll (juce::Colour(0xff0d0d0f));
+    
+    // Noise/Brush Texture
+    juce::Random r;
+    for (int i = 0; i < 1000; ++i) {
+        g.setColour (juce::Colours::white.withAlpha (0.015f));
+        int x = r.nextInt(getWidth());
+        int y = r.nextInt(getHeight());
+        g.drawLine (x, y, x + r.nextInt(100), y, 1.0f);
+    }
 
-    // Headers with BEBAS (Mocking Font loading here)
+    // Panels/Bezels
+    g.setColour (juce::Colours::black.withAlpha(0.6f));
+    g.fillRoundedRectangle(20, 100, 300, 400, 12.0f); // Auto
+    g.fillRoundedRectangle(340, 100, 320, 400, 12.0f); // Comp
+    g.fillRoundedRectangle(680, 100, 300, 400, 12.0f); // FX
+
+    g.setColour (juce::Colours::white.withAlpha(0.1f));
+    g.drawRoundedRectangle(20, 100, 300, 400, 12.0f, 2.0f);
+    g.drawRoundedRectangle(340, 100, 320, 400, 12.0f, 2.0f);
+    g.drawRoundedRectangle(680, 100, 300, 400, 12.0f, 2.0f);
+
+    // --- TITLES (BEBAS STYLE) ---
     g.setColour (juce::Colours::white);
-    g.setFont(juce::Font("Bebas Neue", 36.0f, juce::Font::bold));
-    g.drawText ("NADA BOSS VOCAL SUITE", 20, 20, 400, 40, juce::Justification::left);
+    g.setFont (juce::Font ("Inter", 50.0f, juce::Font::bold)); // Fallback if Bebas not loaded
+    g.drawText ("NADA BOSS VOCAL SUITE", 30, 30, getWidth() - 60, 60, juce::Justification::left);
 
-    g.setFont(juce::Font("Bebas Neue", 18.0f, juce::Font::plain));
-    g.drawText("FET COMP", 50, 100, 100, 20, juce::Justification::centred);
-    g.drawText("OPTO LEVEL", 250, 100, 100, 20, juce::Justification::centred);
-    g.drawText("AUTOTUNE", 450, 100, 100, 20, juce::Justification::centred);
+    g.setFont (30.0f);
+    g.setColour (juce::Colours::red);
+    g.drawText("AUTOTUNE", 20, 110, 300, 40, juce::Justification::centred);
+    g.drawText("COMPRESSORS", 340, 110, 320, 40, juce::Justification::centred);
+    g.drawText("FX BUS", 680, 110, 300, 40, juce::Justification::centred);
+
+    // Labels
+    g.setFont (16.0f);
+    g.setColour (juce::Colours::white.withAlpha(0.7f));
+    g.drawText("SPEED", 120, 280, 100, 20, juce::Justification::centred);
+    g.drawText("KEY", 60, 370, 70, 20, juce::Justification::centred);
+    g.drawText("SCALE", 210, 370, 70, 20, juce::Justification::centred);
+    
+    g.drawText("FET THRESH", 360, 280, 120, 20, juce::Justification::centred);
+    g.drawText("FET RATIO", 360, 430, 120, 20, juce::Justification::centred);
+    g.drawText("OPTO LEVEL", 520, 280, 120, 20, juce::Justification::centred);
+
+    g.drawText("REVERB", 720, 280, 80, 20, juce::Justification::centred);
+    g.drawText("DELAY", 880, 280, 80, 20, juce::Justification::centred);
+    g.drawText("STEREO", 800, 430, 100, 20, juce::Justification::centred);
+
+    // --- LED METERS (SIMULATED) ---
+    for (int i = 0; i < 10; ++i) {
+        g.setColour (juce::Colours::red.withAlpha (r.nextFloat() > 0.3 ? 0.8f : 0.1f));
+        g.fillRect(30, 480 - (i * 12), 15, 8);
+        g.fillRect(50, 480 - (i * 12), 15, 8);
+    }
 }
 
 void NADAAudioProcessorEditor::resized()
 {
-    fetSlider.setBounds(50, 130, 150, 150);
-    optoSlider.setBounds(250, 130, 150, 150);
-    autotuneSlider.setBounds(450, 130, 150, 150);
-    nadaButton.setBounds(150, 320, 300, 60);
+    // Autotune
+    autotuneSpeedSlider.setBounds(70, 150, 200, 200);
+    keySelector.setBounds(50, 330, 90, 35);
+    scaleSelector.setBounds(200, 330, 90, 35);
+
+    // Dynamics
+    fetThreshSlider.setBounds(360, 150, 120, 120);
+    fetRatioSlider.setBounds(360, 310, 120, 120);
+    optoThreshSlider.setBounds(520, 150, 120, 120);
+
+    // FX
+    reverbMixSlider.setBounds(700, 150, 120, 120);
+    delayMixSlider.setBounds(860, 150, 120, 120);
+    stereoWidthSlider.setBounds(780, 310, 140, 140);
+
+    // NADA AI Button (Glow Centerpiece)
+    nadaButton.setBounds(getWidth()/2 - 100, getHeight() - 140, 200, 80);
 }
 
-void NADAAudioProcessorEditor::buttonClicked(juce::Button* button)
+void NADAAudioProcessorEditor::buttonClicked (juce::Button* button)
 {
     if (button == &nadaButton)
     {
