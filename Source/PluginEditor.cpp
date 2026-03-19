@@ -19,6 +19,9 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
 
     // --- 1. OUTER SHADOW (Ambient Occlusion) ---
+    juce::Path shadowPath;
+    shadowPath.addEllipse(rx - 2, ry - 1, rw + 4, rw + 4);
+    
     juce::DropShadow ds (juce::Colours::black.withAlpha(0.6f), 6, { 0, 3 });
     ds.drawForPath(g, shadowPath);
     

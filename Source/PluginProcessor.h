@@ -58,11 +58,14 @@ public:
         if (envelope > peakRed) {
             reduction = peakRed / envelope; // Soft knee saturation
         }
+        lastGR = 1.0f - reduction;
         return in * reduction;
     }
+    float getGainReduction() const { return lastGR; }
 private:
     double sampleRate;
     float envelope = 0.0f;
+    float lastGR = 0.0f;
 };
 
 // ==============================================================================
@@ -111,6 +114,9 @@ public:
     void changeProgramName (int index, const juce::String& newName) override {}
 
     void triggerNADAAnalysis();
+    
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
 
     // --- PUBLIC FOR EDITOR ACCESS ---
     struct SpectralFeatures {
