@@ -41,8 +41,11 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
     
     // Glow effect
+    juce::Path outline;
+    juce::PathStrokeType stroke(2.0f);
+    stroke.createStrokedPath(outline, p);
     g.setColour (juce::Colours::red.withAlpha (0.4f));
-    g.fillPath (p.createOutline(juce::PathStrokeType(2.0f)));
+    g.fillPath (outline);
     
     g.setColour (juce::Colours::red);
     g.fillPath (p);
