@@ -1,16 +1,22 @@
 #pragma once
+
+#include <onnxruntime_c_api.h>
 #include <onnxruntime_cxx_api.h>
 #include <vector>
+#include <memory>
 
 class ONNXModelManager
 {
 public:
-    ONNXModelManager() : env(ORT_LOGGING_LEVEL_WARNING, "NADAAI") {}
+    ONNXModelManager() 
+        : env(ORT_LOGGING_LEVEL_WARNING, "NADAAI") 
+    {}
 
     bool loadModel(const void* data, size_t size)
     {
         try {
-            session = std::make_unique<Ort::Session>(env, data, size, Ort::SessionOptions{ nullptr });
+            Ort::SessionOptions sessionOptions;
+            session = std::make_unique<Ort::Session>(env, data, size, sessionOptions);
             return true;
         } catch (...) {
             return false;

@@ -2,6 +2,7 @@
 #include <JuceHeader.h>
 #include <vector>
 #include <complex>
+#include "ONNXModelManager.h"
 
 // ==============================================================================
 // 1. FET COMPRESSOR (1176 Style)
@@ -109,10 +110,20 @@ public:
     const juce::String getProgramName (int index) override { return {}; }
     void changeProgramName (int index, const juce::String& newName) override {}
 
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
-
     void triggerNADAAnalysis();
+
+    // --- PUBLIC FOR EDITOR ACCESS ---
+    struct SpectralFeatures {
+        float lowEnergy = 0.0f;
+        float midEnergy = 0.0f;
+        float highEnergy = 0.0f;
+        float tilt = 0.0f;
+        float sibilance = 0.0f;
+    };
+    SpectralFeatures lastAnalysis;
+    std::atomic<float> inputLevel { 0.0f };
+    std::atomic<float> outputLevel { 0.0f };
+    std::atomic<float> grLevel { 0.0f };
 
     juce::AudioProcessorValueTreeState apvts;
 
@@ -135,22 +146,10 @@ private:
 
     double currentSampleRate = 44100.0;
 
-#include "ONNXModelManager.h"
-
-// ... existing code ...
-
     // --- AI ANALYSIS (Legit Spectral Engine) ---
     ONNXModelManager onnxManager;
-    struct SpectralFeatures {
-        float lowEnergy = 0.0f;
-        float midEnergy = 0.0f;
-        float highEnergy = 0.0f;
-        float tilt = 0.0f;
-        float sibilance = 0.0f;
-    };
 
     void runSpectralAnalysis();
-    SpectralFeatures lastAnalysis;
     
     juce::dsp::FFT fft { 11 }; // 2048 samples
     std::vector<float> analysisBuffer;
