@@ -7,7 +7,7 @@ include(FetchContent)
 FetchContent_Declare(
     juce
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG        7.0.7 # Or latest stable
+    GIT_TAG        7.0.7
 )
 FetchContent_MakeAvailable(juce)
 
@@ -24,10 +24,10 @@ juce_add_plugin(NADA_BOSS_VOCAL_SUITE
     PRODUCT_NAME "NADA BOSS Vocal Suite"
 )
 
-# 3. Generate JuceHeader.h (Required for the current Source code)
+# 3. Generate JuceHeader.h
 juce_generate_juce_header(NADA_BOSS_VOCAL_SUITE)
 
-# 3. Source Files
+# 4. Source Files
 target_sources(NADA_BOSS_VOCAL_SUITE PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginProcessor.h
@@ -35,7 +35,7 @@ target_sources(NADA_BOSS_VOCAL_SUITE PRIVATE
     Source/PluginEditor.h
 )
 
-# 4. Dependencies
+# 5. Dependencies
 target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     PUBLIC
     JUCE_WEB_BROWSER=0
@@ -45,13 +45,17 @@ target_compile_definitions(NADA_BOSS_VOCAL_SUITE
 
 target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_audio_utils
+    juce::juce_audio_processors
+    juce::juce_audio_basics
     juce::juce_dsp
     juce::juce_gui_extra
     juce::juce_graphics
 )
 
-# 5. Assets (Optional)
-# juce_add_binary_data(Assets
-#     SOURCES
-#     # Add font files here if needed
-# )
+# 6. Binary Data (3D Assets)
+juce_add_binary_data(Assets
+    SOURCES
+    Assets/background.png
+    Assets/knob.png
+    Assets/nada_ai_button.png
+)

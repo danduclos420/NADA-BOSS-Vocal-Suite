@@ -27,6 +27,11 @@ private:
     NADAAudioProcessor& audioProcessor;
     NADALookAndFeel customLookAndFeel;
 
+    // --- ASSETS ---
+    juce::Image backgroundImage;
+    juce::Image knobImage;
+    juce::Image buttonImage;
+
     // --- AUTOTUNE SECTION ---
     juce::Slider autotuneSpeedSlider;
     juce::ComboBox keySelector;

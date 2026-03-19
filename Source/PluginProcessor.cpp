@@ -111,6 +111,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
     // FET Comp Group
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_THRESH", "FET Threshold", -60.0f, 0.0f, -20.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_RATIO", "FET Ratio", 1.0f, 20.0f, 4.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE", "Vocal Tone", 0.0f, 1.0f, 0.5f));
 
     // OPTO Comp Group
     params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_THRESH", "OPTO Threshold", -60.0f, 0.0f, -10.0f));
