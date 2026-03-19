@@ -1,0 +1,40 @@
+name: Build NADA BOSS VST3
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Set up MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Configure CMake
+      run: cmake -B build -G "Visual Studio 17 2022" -A x64
+
+    - name: Build Plugin (Release)
+      run: cmake --build build --config Release --target NADA_BOSS_VOCAL_SUITE_VST3
+
+    - name: Set up Inno Setup
+      run: |
+        choco install innosetup
+        echo "C:\Program Files (x86)\Inno Setup 6" >> $GITHUB_PATH
+
+    - name: Create Installer
+      run: |
+        ISCC.exe NADA_Installer.iss
+
+    - name: Upload Installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: NADA_BOSS_Vocal_Suite_Installer
+        path: InstallerBuild/NADA_BOSS_Vocal_Suite_Installer.exe
