@@ -22,7 +22,6 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
         trans = trans.scaled (radius * 2.2f / (float)knobImg.getWidth()); // Fit to radius
         trans = trans.translated (centreX - radius * 1.1f, centreY - radius * 1.1f);
         
-        g.setInterpolationQuality(juce::Graphics::highResamplingQuality);
         g.drawImageTransformed (knobImg, trans);
     }
 }

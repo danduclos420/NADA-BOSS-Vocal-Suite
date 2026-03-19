@@ -121,7 +121,8 @@ private:
     
     // FX
     juce::dsp::Reverb reverb;
-    juce::dsp::Delay<float> delay;
+    juce::dsp::DelayLine<float> delayL;
+    juce::dsp::DelayLine<float> delayR;
 
     double currentSampleRate = 44100.0;
 

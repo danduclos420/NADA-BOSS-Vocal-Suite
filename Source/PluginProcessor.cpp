@@ -20,10 +20,12 @@ void NADAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     juce::dsp::ProcessSpec spec { sampleRate, (juce::uint32)samplesPerBlock, 2 };
     reverb.prepare(spec);
-    delay.prepare(spec);
     
-    // Default Delay (1/8 ping pong)
-    delay.setDelayTime(0, 500.0f); // ms, will be updated by BPM
+    // Fixed size delay line (max 2 seconds)
+    delayL.prepare(spec);
+    delayR.prepare(spec);
+    delayL.setMaximumDelayInSamples(sampleRate * 2.0);
+    delayR.setMaximumDelayInSamples(sampleRate * 2.0);
 }
 
 void NADAAudioProcessor::releaseResources() {}
@@ -46,9 +48,9 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     }
     
     // Calculate 1/8 note delay
-    float delayMs = (60000.0f / bpm) / 2.0f;
-    delay.setDelayTime(0, delayMs);
-    delay.setDelayTime(1, delayMs); // Ping pong cross-feedback logic handled in internal delay usually
+    float delaySamples = ((60000.0f / bpm) / 2.0f) * (currentSampleRate / 1000.0f);
+    delayL.setDelay(delaySamples);
+    delayR.setDelay(delaySamples);
 
     // --- PARAMETERS ---
     float autotuneAmount = *apvts.getRawParameterValue("AUTOTUNE_SPEED");
@@ -59,35 +61,33 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     float delayMix = *apvts.getRawParameterValue("DELAY_MIX");
 
     // --- DSP LOOP ---
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        float left = buffer.getSample(0, sample);
+        float right = buffer.getSample(1, sample);
 
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-        {
-            float s = channelData[sample];
+        // 1. DYNAMICS
+        left = fet.process(left, fetThresh, fetRatio, 0.5f, 50.0f);
+        right = fet.process(right, fetThresh, fetRatio, 0.5f, 50.0f);
+        
+        left = opto.process(left, optoPeak);
+        right = opto.process(right, optoPeak);
 
-            // 1. AUTOTUNE (STUB)
-            pitchDetector.push(s);
-            // In a real PSOLA, we would resample 's' here based on pitchDetector.getPitch()
-            
-            // 2. FET COMP
-            s = fet.process(s, fetThresh, fetRatio, 0.5f, 50.0f);
-
-            // 3. OPTO COMP
-            s = opto.process(s, optoPeak);
-
-            channelData[sample] = s;
-        }
+        // 2. DELAY (Manual Cross-Feedback for Ping-Pong)
+        float dL = delayL.popSample(0);
+        float dR = delayR.popSample(1);
+        
+        delayL.pushSample(0, left + (dR * delayMix * 0.5f));
+        delayR.pushSample(1, right + (dL * delayMix * 0.5f));
+        
+        buffer.setSample(0, sample, left + dL * delayMix);
+        buffer.setSample(1, sample, right + dR * delayMix);
     }
 
-    // --- GLOBAL FX ---
+    // --- GLOBAL REVERB ---
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
-    
-    // Reverb & Delay
     reverb.process(context);
-    delay.process(context);
 }
 
 void NADAAudioProcessor::triggerNADAAnalysis()
