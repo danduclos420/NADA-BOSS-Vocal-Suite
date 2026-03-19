@@ -52,7 +52,7 @@ target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_graphics
 )
 
-# 6. Binary Data (3D Assets)
+# 6. Binary Data (LEGENDARY ASSETS)
 juce_add_binary_data(Assets
     SOURCES
     Assets/background.png

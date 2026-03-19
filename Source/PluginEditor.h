@@ -27,7 +27,7 @@ private:
     NADAAudioProcessor& audioProcessor;
     NADALookAndFeel customLookAndFeel;
 
-    // --- ASSETS ---
+    // --- 3D ASSETS ---
     juce::Image backgroundImage;
     juce::Image knobImage;
     juce::Image buttonImage;
