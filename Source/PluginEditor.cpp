@@ -112,7 +112,7 @@ void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 
     // 2. TITLES & LABELS (ULTRA-CLEAN)
     g.setColour (juce::Colours::white);
-    g.setFont (juce::Font (juce::Font::getStandardFontName(), 50.0f, juce::Font::bold));
+    g.setFont (juce::Font (32.0f, juce::Font::bold));
     g.drawText ("NADA BOSS VOCAL SUITE", 40, 40, 800, 60, juce::Justification::left);
 
     g.setFont (24.0f);

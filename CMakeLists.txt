@@ -59,3 +59,5 @@ juce_add_binary_data(Assets
     Assets/knob.png
     Assets/nada_ai_button.png
 )
+
+target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE Assets)
