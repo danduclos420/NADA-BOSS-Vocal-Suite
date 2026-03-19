@@ -43,6 +43,16 @@ target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
+# --- ONNX RUNTIME (REAL AI) ---
+include(FetchContent)
+FetchContent_Declare(
+    onnxruntime
+    URL https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-win-x64-1.16.3.zip
+)
+FetchContent_MakeAvailable(onnxruntime)
+
+target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE ${onnxruntime_SOURCE_DIR}/include)
+
 target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
@@ -50,6 +60,15 @@ target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_dsp
     juce::juce_gui_extra
     juce::juce_graphics
+    Assets
+    ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib
+)
+
+# Copy DLL to output
+add_custom_command(TARGET NADA_BOSS_VOCAL_SUITE POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll"
+    $<TARGET_FILE_DIR:NADA_BOSS_VOCAL_SUITE>
 )
 
 # 6. Binary Data (LEGENDARY ASSETS)

@@ -23,11 +23,16 @@ public:
             float targetdB = overdB / ratio;
             reduction = std::pow(10.0f, (targetdB - overdB) / 20.0f);
         }
+        lastGR = 1.0f - reduction; // For metering
         return in * reduction;
     }
+    
+    float getGainReduction() const { return lastGR; }
+
 private:
     double sampleRate;
     float envelope = 0.0f;
+    float lastGR = 0.0f;
 };
 
 // ==============================================================================
@@ -124,7 +129,33 @@ private:
     juce::dsp::DelayLine<float> delayL;
     juce::dsp::DelayLine<float> delayR;
 
+    // --- DE-ESSER ---
+    juce::dsp::IIR::Filter<float> deEsserL;
+    juce::dsp::IIR::Filter<float> deEsserR;
+
     double currentSampleRate = 44100.0;
+
+#include "ONNXModelManager.h"
+
+// ... existing code ...
+
+    // --- AI ANALYSIS (Legit Spectral Engine) ---
+    ONNXModelManager onnxManager;
+    struct SpectralFeatures {
+        float lowEnergy = 0.0f;
+        float midEnergy = 0.0f;
+        float highEnergy = 0.0f;
+        float tilt = 0.0f;
+        float sibilance = 0.0f;
+    };
+
+    void runSpectralAnalysis();
+    SpectralFeatures lastAnalysis;
+    
+    juce::dsp::FFT fft { 11 }; // 2048 samples
+    std::vector<float> analysisBuffer;
+    int analysisBufferPos = 0;
+    std::atomic<bool> analysisRequested { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NADAAudioProcessor)
 };
