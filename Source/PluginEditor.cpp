@@ -19,12 +19,14 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
 
     // --- 1. OUTER SHADOW (Ambient Occlusion) ---
-    juce::Path shadowPath;
-    shadowPath.addEllipse(rx - 2, ry - 1, rw + 4, rw + 4);
-    g.setColour(juce::Colours::black.withAlpha(0.4f));
-    g.fillPath(shadowPath);
+    juce::DropShadow ds (juce::Colours::black.withAlpha(0.6f), 6, { 0, 3 });
+    ds.drawForPath(g, shadowPath);
+    
+    // Extra ring shadow
+    g.setColour(juce::Colours::black.withAlpha(0.3f));
+    g.drawEllipse(rx - 1, ry - 1, rw + 2, rw + 2, 2.0f);
 
-    // --- 2. MAIN KNOB BODY (Brushed Steel Effect) ---
+    // --- 2. MAIN KNOB BODY (Anodized Metal Effect) ---
     juce::ColourGradient grad (juce::Colour(0xff2d2d2d), centreX, centreY,
                               juce::Colour(0xff121212), centreX + radius, centreY + radius, true);
     grad.addColour(0.5, juce::Colour(0xff3d3d3d)); // Highlight mid
