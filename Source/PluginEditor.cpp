@@ -10,45 +10,49 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
                                        float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
                                        juce::Slider& slider)
 {
-    auto radius = (float) juce::jmin (width / 2, height / 2) - 4.0f;
-    auto centreX = (float) x + (float) width  * 0.5f;
-    auto centreY = (float) y + (float) height * 0.5f;
-    auto rx = centreX - radius;
-    auto ry = centreY - radius;
-    auto rw = radius * 2.0f;
-    auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    auto outline = slider.findColour (juce::Slider::rotarySliderOutlineColourId);
+    auto fill    = slider.findColour (juce::Slider::rotarySliderFillColourId);
 
-    // --- 1. OUTER SHADOW (Ambient Occlusion) ---
-    juce::Path shadowPath;
-    shadowPath.addEllipse(rx - 2, ry - 1, rw + 4, rw + 4);
+    auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (10);
+    auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
+    auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    auto lineW = 2.0f;
+    auto arcRadius = radius - lineW * 2.5f;
+
+    // --- 1. OUTER RING (Shadow & Depth) ---
+    juce::Path backgroundArc;
+    backgroundArc.addCentredArc (bounds.getCentreX(), bounds.getCentreY(), arcRadius, arcRadius, 0.0f, rotaryStartAngle, rotaryEndAngle, true);
+    g.setColour (juce::Colours::black.withAlpha (0.4f));
+    g.strokePath (backgroundArc, juce::PathStrokeType (lineW * 2.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    // --- 2. THE KNOB BODY (Elite Metallic) ---
+    auto knobRect = bounds.reduced(lineW * 4.0f);
+    juce::Path knobPath;
+    knobPath.addEllipse(knobRect);
     
-    juce::DropShadow ds (juce::Colours::black.withAlpha(0.6f), 6, { 0, 3 });
-    ds.drawForPath(g, shadowPath);
+    juce::ColourGradient knobGrad (juce::Colour(0xff444444), knobRect.getX(), knobRect.getY(),
+                                  juce::Colour(0xff1a1a1a), knobRect.getRight(), knobRect.getBottom(), true);
+    knobGrad.addColour (0.5, juce::Colour(0xff222222));
+    g.setGradientFill (knobGrad);
+    g.fillPath(knobPath);
     
-    // Extra ring shadow
-    g.setColour(juce::Colours::black.withAlpha(0.3f));
-    g.drawEllipse(rx - 1, ry - 1, rw + 2, rw + 2, 2.0f);
+    // Top highlight (Brushed effect)
+    g.setColour(juce::Colours::white.withAlpha(0.05f));
+    g.drawEllipse(knobRect.reduced(1), 1.0f);
 
-    // --- 2. MAIN KNOB BODY (Anodized Metal Effect) ---
-    juce::ColourGradient grad (juce::Colour(0xff2d2d2d), centreX, centreY,
-                              juce::Colour(0xff121212), centreX + radius, centreY + radius, true);
-    grad.addColour(0.5, juce::Colour(0xff3d3d3d)); // Highlight mid
-    g.setGradientFill (grad);
-    g.fillEllipse (rx, ry, rw, rw);
-
-    // --- 3. METALLIC RIM ---
-    g.setColour (juce::Colours::white.withAlpha(0.2f));
-    g.drawEllipse (rx, ry, rw, rw, 1.5f);
-
-    // --- 4. INDICATOR (Red Dot or Line) ---
+    // --- 3. THE INDICATOR (Glowing Red Line) ---
     juce::Path p;
-    auto pointerLength = radius * 0.8f;
+    auto pointerLength = radius * 0.4f;
     auto pointerThickness = 3.0f;
-    p.addRoundedRectangle (-pointerThickness * 0.5f, -radius, pointerThickness, radius * 0.4f, 1.0f);
-    p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
-
-    g.setColour (juce::Colours::red);
+    p.addRoundedRectangle (-pointerThickness * 0.5f, -radius + 6.0f, pointerThickness, pointerLength, 1.5f);
+    p.applyTransform (juce::AffineTransform::rotation (toAngle).translated (bounds.getCentreX(), bounds.getCentreY()));
+    
+    g.setColour (juce::Colours::red.withBrightness(0.9f));
     g.fillPath (p);
+    
+    // Indicator Shadow
+    g.setColour (juce::Colours::black.withAlpha(0.5f));
+    g.strokePath (p, juce::PathStrokeType(1.0f));
 }
 
 void NADALookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& button,

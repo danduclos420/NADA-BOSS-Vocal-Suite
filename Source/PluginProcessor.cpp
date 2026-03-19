@@ -6,6 +6,8 @@ NADAAudioProcessor::NADAAudioProcessor()
                                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "PARAMETERS", createParameterLayout())
 {
+    analysisBuffer.resize(2048, 0.0f);
+    startTimerHz(30); 
 }
 
 NADAAudioProcessor::~NADAAudioProcessor() {}
@@ -129,9 +131,6 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     inputLevel = juce::jmax(0.0f, std::sqrt(inRMS / (float)buffer.getNumSamples()));
     outputLevel = juce::jmax(0.0f, std::sqrt(outRMS / (float)buffer.getNumSamples()));
     grLevel = maxGR;
-
-    if (analysisRequested)
-        runSpectralAnalysis();
 
     // --- DYNAMIC DE-ESSER ---
     float sibGain = juce::jlimit(juce::Decibels::decibelsToGain(-deEssRange), 1.0f, 1.0f - (lastAnalysis.sibilance * 1.5f));

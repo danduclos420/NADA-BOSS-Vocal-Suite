@@ -89,11 +89,20 @@ private:
 // ==============================================================================
 // 4. MAIN PROCESSOR
 // ==============================================================================
-class NADAAudioProcessor  : public juce::AudioProcessor
+class NADAAudioProcessor  : public juce::AudioProcessor, public juce::Timer
 {
 public:
     NADAAudioProcessor();
     ~NADAAudioProcessor() override;
+
+    void timerCallback() override
+    {
+        if (analysisRequested.load())
+        {
+            runSpectralAnalysis();
+            analysisRequested = false;
+        }
+    }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
