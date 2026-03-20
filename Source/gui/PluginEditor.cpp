@@ -168,7 +168,6 @@ void NADAAudioProcessorEditor::timerCallback()
     webView->evaluateJavascript(specJs);
     
     // 3. LED Displays
-    auto speed = audioProcessor.apvts.getRawParameterValue("AUTOTUNE_SPEED")->load();
     juce::String ledJs = juce::String::formatted("if(window.updateLedDisplay) updateLedDisplay('note', 'C#');"); // Note detection logic here
     webView->evaluateJavascript(ledJs);
 

@@ -192,7 +192,7 @@ void NADAAudioProcessor::runSpectralAnalysis()
     // Example: If low energy is > target, reduce EQ Band 2 (Mud)
     if (lastAnalysis.lowEnergy > 0.5f) {
         if (auto* p = apvts.getParameter("EQ_BAND_2_GAIN"))
-            p->setValueNotifyingHost((float)juce::Decibels::gainToDecibels(0.7f) / 12.0f); // Normalize
+            p->setValueNotifyingHost((float)(juce::Decibels::gainToDecibels(0.7f) / 12.0));
     }
 
     // Example: If sibilance is high, increase De-esser Range
@@ -203,10 +203,10 @@ void NADAAudioProcessor::runSpectralAnalysis()
 
     // Normalize Output to -10 LUFS
     float targetLUFS = -10.0f;
-    float currentLUFS = (float)juce::Decibels::gainToDecibels(outputLevel.load());
+    float currentLUFS = (float)juce::Decibels::gainToDecibels((double)outputLevel.load());
     float makeup = targetLUFS - currentLUFS;
     if (auto* p = apvts.getParameter("LIMITER_THRESH"))
-        p->setValueNotifyingHost(std::clamp(makeup / 24.0f, 0.0f, 1.0f));
+        p->setValueNotifyingHost((float)std::clamp((double)makeup / 24.0, 0.0, 1.0));
 
     analysisRequested = false;
 }
