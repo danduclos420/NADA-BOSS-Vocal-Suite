@@ -28,15 +28,46 @@ knobs.forEach(knob => {
     });
 });
 
-// Update Meters from C++ (Timer Callback)
-function updateMeters(input, gr, output) {
-    needles.in.style.transform = `rotate(${input * 40}deg)`;
-    needles.gr.style.transform = `rotate(${gr * 40}deg)`;
-    needles.out.style.transform = `rotate(${output * 40}deg)`;
+const canvas = document.getElementById('canvas-analyzer');
+const ctx = canvas.getContext('2d');
+
+function updateSpectrum(fftData) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 2;
+    
+    const sliceWidth = canvas.width / fftData.length;
+    let x = 0;
+
+    for(let i = 0; i < fftData.length; i++) {
+        const v = fftData[i] * canvas.height;
+        const y = canvas.height - v;
+
+        if(i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+
+        x += sliceWidth;
+    }
+    ctx.stroke();
+    
+    // Add red glow area beneath
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+    ctx.fill();
 }
 
-// AI Button Trigger
-document.getElementById('btn-activate').addEventListener('click', () => {
-    // Call Native JUCE function via window.external or custom bridge
-    console.log("AI Analysis Requested");
-});
+function updateMeters(input, gr, output) {
+    needles.in.style.transform = `rotate(${(input - 0.5) * 90}deg)`;
+    needles.gr.style.transform = `rotate(${(gr - 0.5) * 90}deg)`;
+    needles.out.style.transform = `rotate(${(output - 0.5) * 90}deg)`;
+}
+
+// Notify C++ of parameter changes
+function setParameter(id, value) {
+    // This will be called via the JUCE Native Bridge
+    if (window.juce) {
+        window.juce.setParam(id, value);
+    }
+}

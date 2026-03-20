@@ -27,9 +27,18 @@
                         <label>RETUNE SPEED</label>
                         <div class="knob large" id="knob-speed"><div class="indicator"></div></div>
                     </div>
+                    <div class="selectors">
+                        <select id="select-key">
+                            <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option>
+                            <option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option>
+                            <option>A#</option><option>B</option>
+                        </select>
+                        <select id="select-scale">
+                            <option>Major</option><option>Minor</option>
+                        </select>
+                    </div>
                     <div class="mini-display">
-                        <div class="pitch-info">NOTE: <span id="pitch-val">C#</span></div>
-                        <div class="pitch-meter"><div class="pitch-bar" style="width: 70%"></div></div>
+                        <div class="pitch-info">DETECTION: <span id="pitch-val">--</span></div>
                     </div>
                 </div>
             </section>

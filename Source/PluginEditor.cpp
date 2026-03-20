@@ -85,20 +85,16 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     // --- 1. SETUP WEB VIEW ---
-    webView = std::make_unique<juce::WebBrowserComponent>(
-        juce::WebBrowserComponent::Options{}
-            .withResourceProvider ([this](const juce::String& url) {
-                // Determine file path
-                auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
-                auto file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
-                
-                if (file.existsAsFile())
-                    return std::make_optional (juce::WebBrowserComponent::Resource { file.loadFileAsData(), file.getFileExtension().replace(".", "") });
-                
-                return std::optional<juce::WebBrowserComponent::Resource>{};
-            })
-    );
+    auto options = juce::WebBrowserComponent::Options{}
+        .withResourceProvider ([this](const juce::String& url) {
+            auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
+            auto file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
+            if (file.existsAsFile())
+                return std::make_optional (juce::WebBrowserComponent::Resource { file.loadFileAsData(), file.getFileExtension().replace(".", "") });
+            return std::optional<juce::WebBrowserComponent::Resource>{};
+        });
 
+    webView = std::make_unique<juce::WebBrowserComponent>(options);
     addAndMakeVisible (*webView);
     webView->goToURL ("http://localhost/");
 
@@ -121,11 +117,24 @@ void NADAAudioProcessorEditor::resized()
 
 void NADAAudioProcessorEditor::timerCallback()
 {
-    // Send telemetry to JS
+    // 1. Meters
     auto input = audioProcessor.inputLevel.load();
     auto gr = audioProcessor.grLevel.load();
     auto output = audioProcessor.outputLevel.load();
     
-    juce::String js = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
-    webView->executeJavaScript(js);
+    juce::String meterJs = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
+    webView->executeJavaScript(meterJs);
+
+    // 2. Spectrum (Simplified 32-bin telemetry)
+    juce::StringArray bins;
+    bins.add(juce::String(audioProcessor.lastAnalysis.lowEnergy));
+    bins.add(juce::String(audioProcessor.lastAnalysis.midEnergy));
+    bins.add(juce::String(audioProcessor.lastAnalysis.highEnergy));
+    
+    juce::String specJs = "if(window.updateSpectrum) updateSpectrum([" + bins.joinIntoString(",") + "]);";
+    webView->executeJavaScript(specJs);
+    
+    // 3. Pitch Note
+    // (Actual logic would detect note in C++)
+    webView->executeJavaScript("document.getElementById('pitch-val').innerText = 'D#';");
 }

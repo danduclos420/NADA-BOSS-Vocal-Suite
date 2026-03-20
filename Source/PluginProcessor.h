@@ -153,15 +153,19 @@ private:
     NADAPitchShifter pitchShifter;
     juce::dsp::ProcessorChain<
         juce::dsp::IIR::Filter<float>,    // 1. High Pass
-        juce::dsp::IIR::Filter<float>,    // 2. Subtractive EQ
-        juce::dsp::Bias<float>,           // 3. SSL Saturation (Placeholder Bias)
-        juce::dsp::Gain<float>,            // 4. Input Gain
-        juce::dsp::Compressor<float>,      // 5. FET 1176
-        juce::dsp::Compressor<float>,      // 6. OPTO LA-2A
-        juce::dsp::IIR::Filter<float>,    // 7. De-esser
-        juce::dsp::IIR::Filter<float>,    // 8. Air Shelf
-        juce::dsp::Gain<float>,            // 9. Saturation Drive
-        juce::dsp::Limiter<float>         // 10. True Peak Limiter
+        juce::dsp::IIR::Filter<float>,    // 2. Subtractive Mud EQ
+        juce::dsp::Compressor<float>,      // 3. FET 1176
+        juce::dsp::Compressor<float>,      // 4. OPTO LA-2A
+        juce::dsp::IIR::Filter<float>,    // 5. EQP-A (Low/High)
+        juce::dsp::Bias<float>,           // 6. SSL Console Sat
+        juce::dsp::Gain<float>,            // 7. Saturation Grain
+        juce::dsp::Compressor<float>,      // 8. Final Comp
+        juce::dsp::IIR::Filter<float>,    // 9. De-esser
+        juce::dsp::IIR::Filter<float>,    // 10. Final EQ tone
+        juce::dsp::Panner<float>,          // 11. Stereo Enhancer (Pan/Width)
+        juce::dsp::Reverb,                 // 12. Reverb Bus
+        juce::dsp::Gain<float>,            // 13. Delay Feedback (Placeholder)
+        juce::dsp::Limiter<float>         // 14. True Peak Limiter
     > dspChain;
 
     void updateDSPChain();
