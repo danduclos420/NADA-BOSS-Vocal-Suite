@@ -65,20 +65,30 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 
 void NADAAudioProcessor::updateDSPChain()
 {
-    auto speed = apvts.getRawParameterValue("AUTOTUNE_SPEED")->load();
     auto fetThresh = apvts.getRawParameterValue("FET_THRESH")->load();
+    auto fetRatioIdx = (int)apvts.getRawParameterValue("FET_RATIO")->load();
     auto optoRed = apvts.getRawParameterValue("OPTO_RED")->load();
     auto air = apvts.getRawParameterValue("AIR")->load();
+    auto bass = apvts.getRawParameterValue("BASS_BOOST")->load();
+    auto sslDrive = apvts.getRawParameterValue("SSL_DRIVE")->load();
+    auto satGain = apvts.getRawParameterValue("SAT_GRAIN")->load();
+    auto deesserRange = apvts.getRawParameterValue("DEESSER_RANGE")->load();
     auto width = apvts.getRawParameterValue("STEREO_WIDTH")->load();
     auto reverbWet = apvts.getRawParameterValue("REVERB_WET")->load();
+    auto delayWet = apvts.getRawParameterValue("DELAY_WET")->load();
+    auto limiterThresh = apvts.getRawParameterValue("LIMITER_THRESH")->load();
     
     // 1. High Pass
     *dspChain.get<0>().coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighPass(currentSampleRate, 80.0f);
     
+    // 2. Mud EQ (Fixed cut at 250Hz for now)
+    *dspChain.get<1>().coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, 250.0f, 0.7f, 0.5f);
+
     // 3. FET 1176
     auto& fet = dspChain.get<2>();
     fet.setThreshold(fetThresh);
-    fet.setRatio(4.0f);
+    float ratios[] = { 4.0f, 8.0f, 12.0f, 20.0f, 20.0f };
+    fet.setRatio(ratios[fetRatioIdx]);
     fet.setAttack(0.0001f);
     fet.setRelease(0.1f);
     
@@ -89,12 +99,26 @@ void NADAAudioProcessor::updateDSPChain()
     opto.setAttack(0.01f);
     opto.setRelease(0.5f);
     
-    // 5. EQP-A (Air Shelf)
+    // 5. EQP-A
     *dspChain.get<4>().coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, 12000.0f, 0.7f, juce::Decibels::decibelsToGain(air));
     
+    // 6. SSL Console
+    dspChain.get<5>().setBias(sslDrive * 0.5f);
+
+    // 7. Saturation
+    dspChain.get<6>().setGainLinear(1.0f + satGain);
+
+    // 8. Final Comp (Ratio 2:1)
+    auto& fcomp = dspChain.get<7>();
+    fcomp.setThreshold(-20.0f);
+    fcomp.setRatio(2.0f);
+
+    // 9. De-Esser (Fixed at 6k for now)
+    *dspChain.get<8>().coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, 6000.0f, 1.0f, juce::Decibels::decibelsToGain(-deesserRange));
+
     // 11. Stereo Width
-    dspChain.get<10>().setPan(width); // Simplified width mapping
-    
+    dspChain.get<10>().setPan(width - 1.0f);
+
     // 12. Reverb
     juce::dsp::Reverb::Parameters revParams;
     revParams.roomSize = 0.5f;
@@ -103,9 +127,12 @@ void NADAAudioProcessor::updateDSPChain()
     revParams.dryLevel = 1.0f - reverbWet;
     dspChain.get<11>().setParameters(revParams);
     
+    // 13. Delay Mix
+    dspChain.get<12>().setGainLinear(delayWet);
+
     // 14. Limiter
     auto& limiter = dspChain.get<13>();
-    limiter.setThreshold(-0.1f);
+    limiter.setThreshold(limiterThresh);
     limiter.setRelease(0.1f);
 }
 
@@ -124,23 +151,20 @@ void NADAAudioProcessor::runSpectralAnalysis()
     // 2. Perform FFT
     fft.performFrequencyOnlyForwardTransform(fftData.data());
 
-    // 3. Extract Features (Bands)
+    // 3. Extract Features
     int binCount = fft.getSize() / 2;
     float nyquist = (float)currentSampleRate / 2.0f;
     float binWidth = nyquist / (float)binCount;
 
-    float low = 0, mid = 0, high = 0, sib = 0;
-    int lowBins = 0, midBins = 0, highBins = 0, sibBins = 0;
+    float centroid = 0.0f;
+    float totalEnergy = 0.0f;
+    float sibilanceEnergy = 0.0f;
 
     for (int i = 1; i < binCount; ++i)
     {
         float freq = i * binWidth;
         float mag = fftData[i];
 
-        if (freq < 250.0f) { low += mag; lowBins++; }
-        else if (freq < 4000.0f) { mid += mag; midBins++; }
-        else if (freq < 15000.0f) { high += mag; highBins++; }
-        
         centroid += freq * mag;
         totalEnergy += mag;
         
@@ -148,19 +172,17 @@ void NADAAudioProcessor::runSpectralAnalysis()
     }
 
     if (totalEnergy > 0.0001f) {
-        lastAnalysis.lowEnergy = totalEnergy / numBins;
-        lastAnalysis.midEnergy = centroid / (totalEnergy * 20000.0f); // Normalized
+        lastAnalysis.lowEnergy = totalEnergy / (float)binCount;
+        lastAnalysis.midEnergy = centroid / (totalEnergy * 20000.0f); 
         lastAnalysis.highEnergy = sibilanceEnergy / totalEnergy;
     }
 
-    // AI MAPPING (Rule-Based for "Gold" stability)
-    // 1. If sibilance is high, increase De-esser
-    auto* deesserParam = apvts.getParameter("DEESSER_RANGE");
-    if (lastAnalysis.highEnergy > 0.3f) deesserParam->setValueNotifyingHost(0.6f); 
+    // AI MAPPING
+    if (auto* deesserParam = apvts.getParameter("DEESSER_RANGE"))
+        if (lastAnalysis.highEnergy > 0.3f) deesserParam->setValueNotifyingHost(0.6f); 
     
-    // 2. If brightness is low, increase Air
-    auto* airParam = apvts.getParameter("AIR");
-    if (lastAnalysis.midEnergy < 0.2f) airParam->setValueNotifyingHost(0.4f);
+    if (auto* airParam = apvts.getParameter("AIR"))
+        if (lastAnalysis.midEnergy < 0.2f) airParam->setValueNotifyingHost(0.4f);
 
     analysisRequested = false;
 }
