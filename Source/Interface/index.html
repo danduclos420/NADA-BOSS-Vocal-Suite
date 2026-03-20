@@ -3,72 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <title>NADA BOSS ULTIMATE</title>
 </head>
 <body>
-    <div class="master-desk">
-        <!-- HEADER -->
-        <header class="rack-slot" style="height: 60px; padding: 0 20px; border-radius: 0;">
-            <div class="logo" style="color:#fff; font-weight:900; font-size:24px;">NADA <span style="color:var(--neon-red)">BOSS</span></div>
-            <button class="btn-gold-ai">ACTIVATE NADA IA</button>
-            <div class="v-tag" style="font-size:9px; color:#555">ULTIMATE EDITION // MASTERING GRADE</div>
+    <div class="plugin-container">
+        <!-- HEADER SECTION -->
+        <header class="plugin-header">
+            <div class="header-left">
+                <h1>NADA AUDIO</h1>
+                <h2>PRO-VOCALIST SUITE</h2>
+                <span class="sub-font">BEBAS NEUE BOLD</span>
+            </div>
+            
+            <div class="ai-master-housing">
+                <div class="ai-ring-glow"></div>
+                <button class="ai-button-gold" id="btn-nada-ai">
+                    <span class="ai-text">NADA</span>
+                    <span class="ai-sub-text">AI</span>
+                </button>
+            </div>
+
+            <div class="header-right">
+                <div class="vst-badge">VST3</div>
+                <h2>4K RESOLUTION</h2>
+                <span class="sub-font">BEBAS NEUE BOLD</span>
+            </div>
         </header>
 
-        <!-- MAIN RACK -->
-        <main class="rack-grid" style="display: grid; grid-template-rows: 1fr 1fr; gap: 4px; padding: 4px;">
-            <!-- ROW 1: AUTOTUNE & DYNAMICS -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
-                <div class="rack-slot">
-                    <div class="slot-label">Autotune Engine</div>
-                    <div class="knob-container">
-                        <div class="knob-hw" id="knob-speed"></div>
-                        <div class="knob-label">SPEED</div>
+        <!-- MAIN CONTROL GRID -->
+        <div class="control-grid">
+            
+            <!-- SECTION: AUTOTUNE -->
+            <section class="module-box autotune">
+                <div class="module-title">AUTOTUNE</div>
+                <div class="module-content">
+                    <div class="meter-group">
+                        <label>SIGNAL</label>
+                        <div class="led-meter-v"><div class="led-fill" id="meter-signal"></div></div>
+                        <label>SIGNAL</label>
                     </div>
-                    <div class="selector-container" style="display:flex; flex-direction:column; gap:10px;">
-                        <div class="hw-selector" id="sel-key">C#</div>
-                        <div class="hw-selector" id="sel-scale">MAJOR</div>
+                    
+                    <div class="knob-main-group">
+                        <div class="knob-hw large" id="knob-pitch"><div class="indicator"></div></div>
+                        <label>PITCH</label>
+                        <div class="knob-hw medium" id="knob-speed"><div class="indicator"></div></div>
+                        <label>SPEED</label>
+                    </div>
+
+                    <div class="meter-group">
+                        <label>TUNE</label>
+                        <div class="led-meter-v"><div class="led-fill" id="meter-tune"></div></div>
+                        <label>TUNE</label>
                     </div>
                 </div>
-                <div class="rack-slot">
-                    <div class="slot-label">Precision Dynamics (FET/OPTO)</div>
-                    <div class="knob-container"><div class="knob-hw" id="knob-fet-in"></div><div class="knob-label">INPUT</div></div>
-                    <div class="knob-container"><div class="knob-hw" id="knob-fet-out"></div><div class="knob-label">OUTPUT</div></div>
-                    <div class="knob-container"><div class="knob-hw" id="knob-opto-red"></div><div class="knob-label">OPTO RED</div></div>
-                    <div class="vu-display"><div class="vu-bar" id="vu-gr"></div></div>
+                <div class="module-footer">
+                    <button class="hw-btn active">SCALE</button>
+                    <button class="hw-btn">KEY</button>
+                    <button class="hw-btn">TUNE</button>
                 </div>
-            </div>
+            </section>
 
-            <!-- ROW 2: TONAL & FX -->
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 4px;">
-                <div class="rack-slot">
-                    <div class="slot-label">Tonal Surgery (EQP-A / SSL)</div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">BASS</div></div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">MID</div></div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">AIR</div></div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">SSL DRIVE</div></div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">DE-ESSER</div></div>
+            <!-- SECTION: OPTO COMPRESSOR -->
+            <section class="module-box opto">
+                <div class="module-title">OPTO COMPRESSOR</div>
+                <div class="module-content horizontal">
+                    <div class="knob-main-group">
+                        <div class="knob-hw extra-large" id="knob-opto-red"><div class="indicator"></div></div>
+                        <label>PEAK RED.</label>
+                    </div>
+                    <div class="meter-columns">
+                        <div class="led-meter-v mini"><div class="led-fill" id="meter-opto-gr"></div></div>
+                        <div class="led-meter-v mini"><div class="led-fill" id="meter-opto-out"></div></div>
+                    </div>
+                    <div class="mini-knobs-stack">
+                        <div class="knob-hw mini"><div class="indicator"></div></div>
+                        <label>RATIO</label>
+                        <div class="knob-hw mini"><div class="indicator"></div></div>
+                        <label>GAIN</label>
+                    </div>
                 </div>
-                <div class="rack-slot">
-                    <div class="slot-label">Spatial & Time</div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">WIDTH</div></div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">REVERB</div></div>
-                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">DELAY</div></div>
+                <div class="module-footer">
+                    <div class="hw-switch-led" id="sw-opto"></div>
+                    <label>OPTO</label>
                 </div>
-            </div>
-        </main>
+            </section>
 
-        <!-- FOOTER: PAZ ANALYZER -->
-        <footer class="rack-slot" style="margin: 0 8px 8px 8px; height: 160px; display: grid; grid-template-columns: 1fr 1fr 150px; gap: 20px;">
-            <div class="paz-box" style="background:#000; border:1px solid #333; height:130px;"><canvas id="spec"></canvas></div>
-            <div class="paz-box" style="background:#000; border:1px solid #333; height:130px;"><canvas id="gonio"></canvas></div>
-            <div class="master-out">
-                <div class="knob-container">
-                    <div class="knob-hw" style="width:70px; height:70px;"></div>
-                    <div class="knob-label">LIMITER</div>
+            <!-- SECTION: FET COMPRESSOR -->
+            <section class="module-box fet">
+                <div class="module-title">FET COMPRESSOR</div>
+                <!-- Complex grid from mockup -->
+                <div class="fet-grid">
+                     <div class="knob-hw large"><div class="indicator"></div></div>
+                     <div class="meter-columns">
+                        <div class="led-meter-v"><div class="led-fill"></div></div>
+                        <div class="led-meter-v"><div class="led-fill"></div></div>
+                     </div>
+                     <div class="knob-hw medium"><div class="indicator"></div></div>
                 </div>
-            </div>
-        </footer>
+                <div class="fet-controls-row">
+                    <!-- Smaller knobs (Ratio, Attack, Release, Makeup) -->
+                </div>
+            </section>
+
+            <!-- SECTION: FX BUS -->
+            <section class="module-box fx-bus">
+                <div class="module-title">FX BUS</div>
+                <div class="fx-section">
+                    <label>REVERB</label>
+                    <div class="knob-hw small"><div class="indicator"></div></div>
+                    <div class="led-dot active"></div>
+                </div>
+                <!-- SAT, DELAY etc -->
+            </section>
+
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

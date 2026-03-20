@@ -1,141 +1,128 @@
 :root {
-    --bg-metal: #1a1b1e;
-    --panel-dark: #121315;
+    --bg-industrial: #1c1d20;
     --neon-red: #ff3c3c;
-    --red-glow: 0 0 10px rgba(255, 60, 60, 0.6);
-    --gold: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
-    --gold-glow: 0 0 15px rgba(212, 175, 55, 0.5);
-    --knob-bg: radial-gradient(circle, #3a3b3e 0%, #0a0b0d 80%);
+    --red-glow: 0 0 12px rgba(255, 60, 60, 0.7);
+    --gold-main: #ffd700;
 }
 
 body {
-    background-color: #000;
-    font-family: 'Inter', sans-serif;
+    background: #000;
     margin: 0;
-    width: 1000px;
-    height: 750px;
-    overflow: hidden;
-    color: #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    user-select: none;
 }
 
-.master-desk {
-    width: 100%;
-    height: 100%;
-    background: var(--bg-metal);
-    background-image: url('https://www.transparenttextures.com/patterns/brushed-alum.png'); /* Placeholder for texture */
-    display: grid;
-    grid-template-rows: 60px 1fr 180px;
-    border: 4px solid #111;
-}
-
-/* HIGH-END RACK SLOT */
-.rack-slot {
-    background: var(--panel-dark);
-    margin: 8px;
-    border-radius: 6px;
-    border: 1px solid #2a2b2e;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.05);
+.plugin-container {
+    width: 600px;
+    height: 600px;
+    background: var(--bg-industrial);
+    background-image: 
+        radial-gradient(circle at 50% 50%, #2a2b30 0%, #151619 100%),
+        url('https://www.transparenttextures.com/patterns/brushed-alum.png');
+    border: 2px solid #111;
+    border-radius: 8px;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.9);
     position: relative;
     padding: 20px;
+    color: #e0e0e0;
+}
+
+/* HEADER STYLE */
+.plugin-header {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 20px;
 }
 
-.slot-label {
+.plugin-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; margin: 0; color: #fff; }
+.plugin-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 16px; margin: 0; color: #888; letter-spacing: 1px; }
+
+/* THE NADA AI BUTTON CORE */
+.ai-master-housing {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.ai-ring-glow {
     position: absolute;
-    top: 6px;
-    left: 12px;
-    font-size: 9px;
-    font-weight: 900;
-    color: #444;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--gold-main) 0%, transparent 70%);
+    filter: blur(15px);
+    opacity: 0.6;
+    animation: pulse 2s infinite ease-in-out;
 }
 
-/* GOLD AI BUTTON */
-.btn-gold-ai {
-    background: var(--gold);
-    color: #000;
-    border: none;
-    padding: 10px 20px;
-    font-weight: 900;
-    font-size: 13px;
-    border-radius: 3px;
-    box-shadow: var(--gold-glow);
-    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-gold-ai:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); }
-
-/* CUSTOM KNOB (THE BRAINWORX LOOK) */
-.knob-container {
+.ai-button-gold {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90px; height: 90px;
+    background: radial-gradient(circle, #333 0%, #000 100%);
+    border: 3px solid #222;
+    border-radius: 50%;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.1);
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
+    cursor: pointer;
 }
 
+.ai-text { color: var(--gold-main); font-weight: 900; font-size: 24px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+/* KNOBS HARDWARE MODEL */
 .knob-hw {
-    width: 54px;
-    height: 54px;
-    background: var(--knob-bg);
+    background: conic-gradient(from 0deg, #222, #0a0a0a, #444, #0a0a0a, #222);
     border-radius: 50%;
-    border: 2px solid #222;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.6), inset 0 2px 2px rgba(255,255,255,0.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.2);
     position: relative;
-    cursor: ns-resize;
+    border: 2px solid #000;
 }
 
-.knob-hw::after {
-    content: '';
+.knob-hw.large { width: 80px; height: 80px; }
+.knob-hw.medium { width: 60px; height: 60px; }
+.knob-hw.extra-large { width: 100px; height: 100px; }
+
+.knob-hw .indicator {
     position: absolute;
-    top: 6px;
-    left: 50%;
-    width: 3px;
-    height: 12px;
+    top: 8px; left: 50%;
+    width: 3px; height: 12px;
     background: var(--neon-red);
     box-shadow: var(--red-glow);
-    transform: translateX(-50%);
-    border-radius: 2px;
+    border-radius: 1px;
+    transform-origin: 50% 250%;
 }
 
-.knob-label { font-size: 10px; font-weight: 700; color: #666; }
-
-/* CUSTOM SELECTOR (No more dropdowns!) */
-.hw-selector {
+/* LED METERS SEGMENTED */
+.led-meter-v {
+    width: 15px; height: 120px;
     background: #050505;
-    border: 1px solid #333;
-    padding: 8px 15px;
-    border-radius: 4px;
-    color: var(--neon-red);
-    font-family: 'Courier New', monospace;
-    font-weight: 900;
-    font-size: 18px;
-    text-shadow: var(--red-glow);
-    cursor: pointer;
-    min-width: 60px;
-    text-align: center;
-}
-
-/* VU METERS */
-.vu-display {
-    background: #000;
     border: 1px solid #222;
-    height: 120px;
-    width: 12px;
-    border-radius: 2px;
     position: relative;
-    overflow: hidden;
+    background-image: linear-gradient(to top, transparent 96%, #000 96%);
+    background-size: 100% 4px; /* Creates segments */
 }
 
-.vu-bar {
+.led-fill {
     position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: linear-gradient(to top, #00ff00, #ffff00, #ff0000);
-    height: 0%;
-    transition: height 0.1s ease;
+    bottom: 0; width: 100%;
+    background: linear-gradient(to top, #600 0%, var(--neon-red) 100%);
+    box-shadow: 0 0 8px rgba(255, 60, 60, 0.4);
+    height: 40%; /* Animated via JS */
+}
+
+@keyframes pulse {
+    0% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+    100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
 }
