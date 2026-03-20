@@ -5,106 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style_pro.css">
-    <title>NADA BOSS GIGA-RACK</title>
+    <title>NADA BOSS GIGA-RACK PROCEDURAL</title>
 </head>
 <body>
     <div class="rack-frame">
-        <div class="ear left"><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="ear right"><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="ear left"><div class="screw"></div><div class="screw"></div><div class="screw"></div></div>
+        <div class="ear right"><div class="screw"></div><div class="screw"></div><div class="screw"></div></div>
 
-        <div class="brand">
+        <div class="branding">
             <h1>NADA AUDIO</h1>
-            <span class="label">MASTERING GRADE VOCAL SUITE</span>
+            <span class="label-v" style="text-align:left; color:#333;">PRO-VOCALIST SUITE // PROCEDURAL ENGINE</span>
         </div>
 
-        <div class="spec">
+        <div class="spec-v">
             <h1>VST3</h1>
-            <span class="label" style="color:var(--neon-red)">4K PHOTOREALISTIC ENGINE</span>
+            <span class="label-v" style="text-align:right; color:var(--neon-red);">INFINITE RESOLUTION</span>
         </div>
 
         <div class="ai-header">
-            <div class="ai-halo-btn"></div>
+            <div class="ai-btn-procedural"></div>
         </div>
 
-        <div class="rack-units">
-            <!-- UNIT 1: AUTOTUNE -->
-            <section class="unit" style="grid-column: span 2;">
-                <div class="unit-h">01. AUTOTUNE ENGINE (PITCH CORRECTION)</div>
+        <div class="modules-grid">
+            <!-- SECTION 1: VOX INPUT -->
+            <section class="module-box" style="grid-column: span 2;">
+                <h3>01-03. INPUT & DYNAMICS</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="knob-pro xl"></div><span class="label">PITCH CORRECTION</span></div>
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">SPEED</span></div>
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">TUNE</span></div>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
-                        <button class="bebas" style="background:#200; border:1px solid #400; color:#f00; padding:5px 15px;">C# MINOR</button>
-                        <button class="bebas" style="background:#111; border:1px solid #333; color:#555; padding:5px 15px;">SCALE MODE</button>
+                    <div class="knob-group"><div class="knob-pro xl"></div><span class="label-v">AUTOTUNE</span></div>
+                    <div class="knob-group"><div class="knob-pro sm"></div><span class="label-v">MUD EQ</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-v">FET 1176</span></div>
+                    <div class="meter-v"><div class="meter-fill" style="height:40%"></div></div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: OPTO -->
+            <section class="module-box">
+                <h3>04. OPTO LEVELER</h3>
+                <div style="display:flex; justify-content:center; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro xl" style="transform:rotate(40deg)"></div><span class="label-v">LA-2A PEAK</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: COLOR -->
+            <section class="module-box">
+                <h3>05-07. TONAL COLOR</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-v">EQP-1A</span></div>
+                    <div class="knob-group"><div class="knob-pro sm"></div><span class="label-v">SSL CONSOLE</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-v">SATURATION</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: FINISHER -->
+            <section class="module-box">
+                <h3>08-10. SURGERY</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-v">FINAL COMP</span></div>
+                    <div class="knob-group"><div class="knob-pro sm"></div><span class="label-v">DE-ESSER</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-v">FINAL EQ</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: MASTERING -->
+            <section class="module-box">
+                <h3>11-12. MASTERING</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-v">WIDTH</span></div>
+                    <div class="knob-group"><div class="knob-pro xl"></div><span class="label-v">LIMITER</span></div>
+                    <div style="display:flex; gap:2px;">
+                        <div class="meter-v"><div class="meter-fill" style="height:90%"></div></div>
+                        <div class="meter-v"><div class="meter-fill" style="height:90%"></div></div>
                     </div>
                 </div>
             </section>
 
-            <!-- UNIT 2: MUD EQ -->
-            <section class="unit">
-                <div class="unit-h">02. REDUCTIVE EQ (MUD)</div>
-                <div style="display:flex; justify-content:center; gap:30px; align-items:center;">
-                    <div class="v-meter"><div class="v-fill" style="height:20%"></div></div>
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">CUT DEPTH</span></div>
-                </div>
-            </section>
-
-            <!-- UNIT 3: FET 1176 -->
-            <section class="unit">
-                <div class="unit-h">03. FET 1176 COMPRESSOR</div>
+            <!-- SECTION 6: BUS FX -->
+            <section class="module-box" style="grid-column: span 3;">
+                <h3>13-14. SEND EFFECTS (BUS)</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="v-meter"><div class="v-fill" style="height:45%"></div></div>
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">THRESHOLD</span></div>
-                    <div class="knob-box"><div class="knob-pro sm"></div><span class="label">MAKEUP</span></div>
-                </div>
-            </section>
-
-            <!-- UNIT 4: LA-2A OPTO -->
-            <section class="unit">
-                <div class="unit-h">04. LA-2A OPTO LEVELER</div>
-                <div style="display:flex; justify-content:center; align-items:center;">
-                    <div class="knob-box"><div class="knob-pro xl" style="transform:rotate(30deg)"></div><span class="label">PEAK REDUCTION</span></div>
-                </div>
-            </section>
-
-            <!-- UNIT 5 & 6 & 7: TONE & COLOR -->
-            <section class="unit">
-                <div class="unit-h">05-07. TONAL COLOR (EQP-1A / SSL / SAT)</div>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="knob-pro sm"></div><span class="label">EQP-1A AIR</span></div>
-                    <div class="knob-box"><div class="knob-pro sm"></div><span class="label">SSL COLOR</span></div>
-                    <div class="knob-box"><div class="knob-pro sm"></div><span class="label">SAT GRAIN</span></div>
-                </div>
-            </section>
-
-            <!-- UNIT 8 & 12: MASTERING -->
-            <section class="unit">
-                <div class="unit-h">08-12. FINAL CHAIN & LIMITER</div>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">FINAL COMP</span></div>
-                    <div class="knob-box"><div class="knob-pro xl"></div><span class="label">-10 LUFS LIMIT</span></div>
-                </div>
-            </section>
-
-            <!-- UNIT 9 & 10: SURGERY -->
-            <section class="unit">
-                <div class="unit-h">09-10. VOCAL SURGERY (DE-ESS / EQ)</div>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="v-meter" style="width:20px;"><div class="v-fill" style="height:10%; background:#0f0;"></div></div>
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">DE-ESSER</span></div>
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">FINAL EQ</span></div>
-                </div>
-            </section>
-
-            <!-- UNIT 11, 13, 14: SPACE -->
-            <section class="unit" style="grid-column: span 2;">
-                <div class="unit-h">11-14. SPATIAL & BUS FX (WIDTH / REV / DELAY)</div>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="knob-pro"></div><span class="label">STEREO WIDTH</span></div>
-                    <div class="knob-box"><div class="knob-pro xl"></div><span class="label">CHAMBER REVERB</span></div>
-                    <div style="width:10px; height:10px; background:var(--neon-red); border-radius:50%; box-shadow:var(--red-glow);"></div>
-                    <div class="knob-box"><div class="knob-pro xl"></div><span class="label">DOUBLER DELAY</span></div>
+                    <div class="knob-group"><div class="knob-pro xl"></div><span class="label-v">REVERB MIX</span></div>
+                    <div style="width:12px; height:12px; background:var(--neon-red); border-radius:50%; box-shadow:var(--red-glow);"></div>
+                    <div class="knob-group"><div class="knob-pro xl"></div><span class="label-v">DELAY MIX</span></div>
                 </div>
             </section>
         </div>
