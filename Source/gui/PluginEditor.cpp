@@ -139,6 +139,12 @@ NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
 {
 }
 
+void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+    juce::ignoreUnused(midiMessages);
+    juce::ScopedNoDenormals noDenormals;
+}
+
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
     juce::ignoreUnused(g);
