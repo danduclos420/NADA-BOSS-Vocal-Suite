@@ -29,7 +29,7 @@ juce_add_plugin(NADA_BOSS_VOCAL_SUITE
 # 3. Generate JuceHeader.h
 juce_generate_juce_header(NADA_BOSS_VOCAL_SUITE)
 
-# 4. Source Files
+# 4. Source Files - NATIVE ONLY (No React/Web UI)
 target_sources(NADA_BOSS_VOCAL_SUITE PRIVATE
     Source/dsp/PluginProcessor.cpp
     Source/dsp/PluginProcessor.h
@@ -50,7 +50,7 @@ target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_WIN_WEBVIEW2=0
-    JUCE_USE_CURL=1
+    JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
@@ -58,7 +58,7 @@ target_compile_definitions(NADA_BOSS_VOCAL_SUITE
 include(FetchContent)
 FetchContent_Declare(
     onnxruntime
-    URL https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-win-x64-1.16.3.zip
+    URL https://github.com/microsoft/onnxruntime/releases/download/v1.18.0/onnxruntime-win-x64-1.18.0.zip
 )
 FetchContent_MakeAvailable(onnxruntime)
 

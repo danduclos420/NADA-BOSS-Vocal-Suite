@@ -39,15 +39,16 @@ void NADAAudioProcessor::releaseResources() {}
 
 void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused(buffer, midiMessages);
+    juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    // Clear unused output channels
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // --- 1. CAPTURE DATA FOR AI ---
+    // --- 1. CAPTURE DATA FOR AI ANALYSIS ---
     auto* inL = buffer.getReadPointer(0);
     for (int i=0; i<buffer.getNumSamples(); ++i) {
         analysisBuffer[(size_t)analysisBufferPos] = inL[i];
@@ -58,7 +59,7 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     // --- 2. UPDATE PARAMETERS (Coefficient calculation) ---
     updateDSPChain();
 
-    // --- 3. HARVEST PARAMETERS (Atomic loads once per block) ---
+    // --- 3. GET PARAMETER VALUES ---
     float userPitch = apvts.getRawParameterValue("AUTOTUNE_PITCH")->load();
     float fetThr = apvts.getRawParameterValue("FET_THRESH")->load();
     float fetRat = apvts.getRawParameterValue("FET_RATIO")->load();
@@ -68,86 +69,91 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     float dsRange = apvts.getRawParameterValue("DEESSER_RANGE")->load();
     float widthValue = apvts.getRawParameterValue("STEREO_WIDTH")->load();
 
-    // 1. Pitch (Crispytuner)
+    // --- 4. PITCH SHIFTING (Crispytuner) ---
     float pitchRatio = std::pow(2.0f, userPitch / 12.0f);
-    // Use human/amount to modulate the target pitch if needed (simulated)
     float tunerAmt = apvts.getRawParameterValue("AUTOTUNE_AMOUNT")->load();
-    pitchShifter.process(buffer, 1.0f + (pitchRatio - 1.0f) * tunerAmt);
+    if (tunerAmt > 0.01f) {
+        pitchShifter.process(buffer, 1.0f + (pitchRatio - 1.0f) * tunerAmt);
+    }
 
-    // Block-based Processing
+    // --- 5. BLOCK-BASED PROCESSING (EQ) ---
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
 
-    // 2. Pro-Q 3
+    // Pro-Q 3
     for (int i=0; i<6; ++i) eq6.bands[i].process(context);
 
-    // --- SAMPLE-WISE POWER LOOP (Stages 3-9) ---
+    // Pultec
+    pultec.low.process(context);
+    pultec.high.process(context);
+
+    // SSL
+    for (int i=0; i<4; ++i) ssl.bands[i].process(context);
+
+    // Limiter
+    limiter.process(context);
+
+    // Reverb
+    reverb.process(context);
+
+    // --- 6. SAMPLE-WISE PROCESSING (Dynamic Compression + Saturation) ---
     auto* left = buffer.getWritePointer(0);
     auto* right = buffer.getWritePointer(1);
+    
     for (int s = 0; s < buffer.getNumSamples(); ++s) {
-        float l = left[s]; float r = right[s];
+        float l = left[s];
+        float r = right[s];
         
-        // 3. 1176
+        // 3. 1176 Compressor
         l = fet1176.process(l, fetThr, fetRat);
         r = fet1176.process(r, fetThr, fetRat);
 
-        // 4. LA-2A
+        // 4. LA-2A Compressor
         l = optoLA2A.process(l, optoRed);
         r = optoLA2A.process(r, optoRed);
 
-        // 7. HG-2
+        // 7. HG-2 Saturation
         l = hg2.process(l, satDrv, 0.1f, 0.1f);
         r = hg2.process(r, satDrv, 0.1f, 0.1f);
 
-        // 8. R-Vox
+        // 8. R-Vox (Vocal Comp)
         l = rvox.process(l, rvoxComp, 0.001f);
         r = rvox.process(r, rvoxComp, 0.001f);
 
-        // 9. 902 De-esser
+        // 9. De-esser 902
         l = deesser.process(l, dsRange);
         r = deesser.process(r, dsRange);
 
-        left[s] = l; right[s] = r;
+        left[s] = l;
+        right[s] = r;
     }
 
-    // 5. Pultec
-    pultec.low.process(context); pultec.high.process(context);
-
-    // 6. SSL
-    for (int i=0; i<4; ++i) ssl.bands[i].process(context);
-
-    // 10. Stereo Width
+    // --- 7. STEREO WIDTH ---
     stereomaker.process(buffer, widthValue, 100.0f);
 
-    // 11. Limiter
-    limiter.process(context);
-
-    // 12. Reverb
-    reverb.process(context);
-
-    // 13. Delay
-    // Simplified sample-wise delay loop for H-Delay
+    // --- 8. DELAY (H-Delay) ---
     for (int s = 0; s < buffer.getNumSamples(); ++s) {
         float delL = delay.lineL.popSample(0);
         delay.lineL.pushSample(0, left[s] + delL * 0.3f);
         left[s] = left[s] * 0.8f + delL * 0.2f;
     }
 
+    // --- 9. OUTPUT MEASUREMENT ---
     outputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
 }
 
 void NADAAudioProcessor::updateDSPChain()
 {
-    // 1. Crispytuner - Handled in processBlock directly
-
-    // 2. Pro-Q 3 (6 Bands)
+    // 1. Pro-Q 3 (6 Bands)
     for (int i=0; i<6; ++i) {
         juce::String prefix = "EQ_BAND_" + juce::String(i+1) + "_";
         bool active = apvts.getRawParameterValue(prefix + "ACTIVE")->load() > 0.5f;
+        
         if (!active) {
             *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeAllPass(mSampleRate, 1000.0f);
             continue;
         }
+        
         float f = apvts.getRawParameterValue(prefix + "FREQ")->load();
         float g = apvts.getRawParameterValue(prefix + "GAIN")->load();
         float q = apvts.getRawParameterValue(prefix + "Q")->load();
@@ -161,28 +167,28 @@ void NADAAudioProcessor::updateDSPChain()
             *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(mSampleRate, f, q);
     }
 
-    // 3. 1176 Coefficients
+    // 2. 1176 Coefficients
     float fAtk = apvts.getRawParameterValue("FET_ATTACK")->load();
     float fRel = apvts.getRawParameterValue("FET_RELEASE")->load();
     fet1176.updateCoefficients(fAtk, fRel);
 
-    // 5. Pultec
+    // 3. Pultec
     float pLowBoost = apvts.getRawParameterValue("PULTEC_LOW_BOOST")->load();
     float pHighBoost = apvts.getRawParameterValue("PULTEC_HIGH_BOOST")->load();
     *pultec.low.coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(mSampleRate, 60.0f, 0.7f, juce::Decibels::decibelsToGain(pLowBoost));
     *pultec.high.coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(mSampleRate, 10000.0f, 0.7f, juce::Decibels::decibelsToGain(pHighBoost));
 
-    // 6. SSL
+    // 4. SSL (4 Bands)
+    float freqs[] = { 200.0f, 800.0f, 3200.0f, 12800.0f };
     for (int i=0; i<4; ++i) {
-        float f = 200.0f * std::pow(4.0f, (float)i);
-        *ssl.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, 1.0f, 1.0f);
+        *ssl.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, freqs[i], 1.0f, 1.0f);
     }
 
-    // 11. Limiter
+    // 5. Limiter
     limiter.setThreshold(apvts.getRawParameterValue("LIMITER_THRESH")->load());
     limiter.setRelease(200.0f);
 
-    // 12. Reverb
+    // 6. Reverb
     juce::dsp::Reverb::Parameters revParams;
     revParams.roomSize = apvts.getRawParameterValue("REVERB_SIZE")->load();
     revParams.wetLevel = apvts.getRawParameterValue("REVERB_MIX")->load();
@@ -197,31 +203,8 @@ void NADAAudioProcessor::triggerNADAAnalysis()
 
 void NADAAudioProcessor::runSpectralAnalysis()
 {
-    // Capture and analyze frequency bands
-    // ... logic to fill spectrum ...
-
-    // AI HEURISTICS (Sound Matching)
-    // Targeting "US VOCAL" Profile: Bright, controlled low-mids, flat but present 2k-5k.
-    
-    // Example: If low energy is > target, reduce EQ Band 2 (Mud)
-    if (lastAnalysis.lowEnergy > 0.5f) {
-        if (auto* p = apvts.getParameter("EQ_BAND_2_GAIN"))
-            p->setValueNotifyingHost((float)(juce::Decibels::gainToDecibels(0.7f) / 12.0));
-    }
-
-    // Example: If sibilance is high, increase De-esser Range
-    if (lastAnalysis.highEnergy > 0.4f) {
-        if (auto* p = apvts.getParameter("DEESSER_RANGE"))
-            p->setValueNotifyingHost(0.8f);
-    }
-
-    // Normalize Output to -10 LUFS
-    float targetLUFS = -10.0f;
-    float currentLUFS = (float)juce::Decibels::gainToDecibels((double)outputLevel.load());
-    float makeup = targetLUFS - currentLUFS;
-    if (auto* p = apvts.getParameter("LIMITER_THRESH"))
-        p->setValueNotifyingHost((float)std::clamp((double)makeup / 24.0, 0.0, 1.0));
-
+    // Placeholder: AI analysis logic
+    // In production, this would use ONNX Runtime to analyze and set optimal parameters
     analysisRequested = false;
 }
 
@@ -229,15 +212,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    // 1. AUTOTUNE
+    // AUTOTUNE
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_SPEED", "Speed", 0.0f, 1.0f, 0.2f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_PITCH", "Pitch", -12.0f, 12.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_HUMAN", "Human", 0.0f, 1.0f, 0.5f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_AMOUNT", "Amount", 0.0f, 1.0f, 1.0f));
-    params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_KEY", "Key", juce::StringArray{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}, 1));
-    params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_SCALE", "Scale", juce::StringArray{"Maj", "Min"}, 1));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_KEY", "Key", juce::StringArray{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_SCALE", "Scale", juce::StringArray{"Maj", "Min"}, 0));
 
-    // 2. Pro-Q 3 (6 Bands)
+    // PRO-Q 3 (6 Bands)
     for (int i=1; i<=6; ++i) {
         juce::String s = "EQ_BAND_" + juce::String(i);
         params.push_back(std::make_unique<juce::AudioParameterFloat>(s + "_FREQ", s + " Freq", 20.0f, 20000.0f, 1000.0f * i));
@@ -247,32 +230,32 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
         params.push_back(std::make_unique<juce::AudioParameterChoice>(s + "_TYPE", s + " Type", juce::StringArray{"Low Cut", "Bell", "High Cut"}, (i==1?0:(i==6?2:1))));
     }
 
-    // 3. 1176
+    // 1176
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_THRESH", "FET Threshold", -60.0f, 0.0f, -20.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_RATIO", "FET Ratio", 4.0f, 20.0f, 4.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_ATTACK", "FET Attack", 20.0f, 800.0f, 100.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_RELEASE", "FET Release", 50.0f, 1100.0f, 100.0f));
 
-    // 4. LA-2A
+    // LA-2A
     params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_RED", "Peak Red", 0.0f, 100.0f, 30.0f));
 
-    // 5. Pultec
+    // Pultec
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PULTEC_LOW_BOOST", "Low Boost", 0.0f, 12.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PULTEC_HIGH_BOOST", "High Boost", 0.0f, 12.0f, 0.0f));
 
-    // 6. SSL
+    // SSL
     params.push_back(std::make_unique<juce::AudioParameterFloat>("SSL_DRIVE", "SSL Drive", 0.0f, 1.0f, 0.1f));
 
-    // 7. HG-2
+    // HG-2
     params.push_back(std::make_unique<juce::AudioParameterFloat>("SAT_DRIVE", "Sat Drive", 0.0f, 1.0f, 0.1f));
 
-    // 8. R-Vox
+    // R-Vox
     params.push_back(std::make_unique<juce::AudioParameterFloat>("RVOX_COMP", "Vox Comp", -30.0f, 0.0f, -10.0f));
 
-    // 9. De-esser
+    // De-esser
     params.push_back(std::make_unique<juce::AudioParameterFloat>("DEESSER_RANGE", "De-Esser Range", 0.0f, 1.0f, 0.2f));
 
-    // 10. Master
+    // Master
     params.push_back(std::make_unique<juce::AudioParameterFloat>("STEREO_WIDTH", "Width", 0.0f, 2.0f, 1.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Limiter Threshold", -24.0f, 0.0f, -0.1f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.2f));
@@ -298,4 +281,3 @@ void NADAAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new NADAAudioProcessor(); }
-juce::AudioProcessorEditor* NADAAudioProcessor::createEditor() { return new NADAAudioProcessorEditor (*this); }
