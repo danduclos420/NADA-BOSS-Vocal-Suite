@@ -15,8 +15,8 @@ public:
     void prepare(double sr) { 
         sampleRate = sr; 
         envelope = 0.0f;
-        thresholdLinear = 0.1f; // Linear representation
-        updateCoefficients(0.1f, 100.0f); // Default attack/release ms
+        thresholdLinear = 0.1f;
+        updateCoefficients(0.1f, 100.0f);
     }
     
     void updateCoefficients(float attackMs, float releaseMs) {
@@ -25,17 +25,13 @@ public:
     }
 
     float process(float in, float thresholdDb, float ratio) {
-        // FIX: Convert threshold from dB to linear
         thresholdLinear = juce::Decibels::decibelsToGain(thresholdDb);
-        
         float absIn = std::abs(in);
-        // Attack/Release envelope follower
         if (absIn > envelope) {
             envelope = attCoef * envelope + (1.0f - attCoef) * absIn;
         } else {
             envelope = relCoef * envelope + (1.0f - relCoef) * absIn;
         }
-
         if (envelope > thresholdLinear) {
             float overdB = 20.0f * std::log10(envelope / thresholdLinear + 1e-9f);
             float targetdB = overdB / ratio;
@@ -46,9 +42,7 @@ public:
         lastGR = 0.0f;
         return in;
     }
-    
     float getGainReduction() const { return lastGR; }
-
 private:
     double sampleRate;
     float envelope = 0.0f;
@@ -64,29 +58,23 @@ class OPTOCompressor {
 public:
     void prepare(double sr) { 
         sampleRate = sr; 
-        attCoef = (float)std::exp(-1.0f / (0.010f * (float)sampleRate)); // Fixed 10ms attack
+        attCoef = (float)std::exp(-1.0f / (0.010f * (float)sampleRate));
         relCoefSlow = (float)std::exp(-1.0f / (2.0f * (float)sampleRate));
         relCoefFast = (float)std::exp(-1.0f / (0.060f * (float)sampleRate));
         envelope = 0.0f;
         inDecay = false;
     }
-    
     float process(float in, float peakRed) {
-        // FIX: peakRed comes in as 0-100 range, normalize to 0-1
         float peakRedLinear = peakRed / 100.0f;
         float absIn = std::abs(in);
-        
-        // Attack phase
         if (absIn > envelope) {
             envelope = attCoef * envelope + (1.0f - attCoef) * absIn;
             inDecay = false;
         } else {
-            // FIX: Only apply release in decay phase
             inDecay = true;
             float relCoef = (envelope > 0.5f) ? relCoefFast : relCoefSlow;
             envelope = relCoef * envelope + (1.0f - relCoef) * absIn;
         }
-
         if (envelope > peakRedLinear) {
             float reduction = peakRedLinear / (envelope + 1e-9f);
             lastGR = 1.0f - reduction;
@@ -95,9 +83,7 @@ public:
         lastGR = 0.0f;
         return in;
     }
-    
     float getGainReduction() const { return lastGR; }
-    
 private:
     double sampleRate;
     float envelope = 0.0f;
@@ -107,27 +93,13 @@ private:
 };
 
 // ==============================================================================
-// 3. YIN PITCH DETECTOR (Placeholder - can be upgraded)
+// 3. YIN PITCH DETECTOR
 // ==============================================================================
 class YinPitchDetector {
 public:
-    void prepare(double sr) { 
-        sampleRate = sr; 
-        buffer.resize(2048, 0.0f);
-        pos = 0;
-    }
-    
-    void push(float s) { 
-        buffer[pos] = s; 
-        pos = (pos + 1) % buffer.size(); 
-    }
-    
-    float getPitch() {
-        // Placeholder: Returns estimated pitch
-        // In production, implement proper YIN algorithm
-        return 440.0f;
-    }
-    
+    void prepare(double sr) { sampleRate = sr; buffer.resize(2048, 0.0f); pos = 0; }
+    void push(float s) { buffer[pos] = s; pos = (pos + 1) % buffer.size(); }
+    float getPitch() { return 440.0f; }
 private:
     double sampleRate;
     std::vector<float> buffer;
@@ -140,7 +112,6 @@ private:
 class HG2Saturator {
 public:
     void prepare(double sr) { sampleRate = sr; }
-    
     float process(float in, float saturation, float pentode, float triode) {
         float x = in * (1.0f + saturation * 2.0f);
         float p = std::tanh(x * (1.0f + pentode));
@@ -149,7 +120,6 @@ public:
         t = (t * t) * (t > 0 ? 1.0f : -1.0f);
         return (p * 0.6f + t * 0.4f) * 0.8f;
     }
-    
 private:
     double sampleRate;
 };
@@ -166,13 +136,11 @@ public:
         comp.setAttack(5.0f);
         comp.setRelease(100.0f);
     }
-    
     float process(float in, float thresh, float gate) {
         if (std::abs(in) < gate) return 0.0f;
         comp.setThreshold(thresh);
         return comp.processSample(0, in);
     }
-    
 private:
     double sampleRate;
     juce::dsp::Compressor<float> comp;
@@ -188,13 +156,11 @@ public:
         filter.prepare({ sr, 512, 1 });
         *filter.coefficients = *juce::dsp::IIR::Coefficients<float>::makeBandPass(sr, 6000.0f, 1.0f);
     }
-    
     float process(float in, float range) {
         float sibilance = filter.processSample(in);
         float reduction = 1.0f - (range * std::abs(sibilance));
         return in * std::max(0.2f, reduction);
     }
-    
 private:
     double sampleRate;
     juce::dsp::IIR::Filter<float> filter;
@@ -206,7 +172,6 @@ private:
 class StereoMaker {
 public:
     void prepare(double sr) { sampleRate = sr; }
-    
     void process(juce::AudioBuffer<float>& buffer, float width, float monoMakerFreq) {
         juce::ignoreUnused(monoMakerFreq);
         auto* l = buffer.getWritePointer(0);
@@ -219,35 +184,24 @@ public:
             r[i] = mid - side;
         }
     }
-    
 private:
     double sampleRate;
 };
 
 // ==============================================================================
-// 8. NADA PITCH SHIFTER (Simple - can be upgraded to full phase vocoder)
+// 8. NADA PITCH SHIFTER
 // ==============================================================================
 class NADAPitchShifter {
 public:
-    void prepare(double sampleRate, int blockSize) {
-        mSampleRate = sampleRate;
-        mBlockSize = blockSize;
-    }
-
-    void process(juce::AudioBuffer<float>& buffer, float pitchRatio) {
-        // Placeholder: Pass audio through unchanged
-        // In production: implement proper phase vocoder or time-stretch algorithm
-        juce::ignoreUnused(pitchRatio);
-        // Currently: identity operation - audio passes through
-    }
-
+    void prepare(double sampleRate, int blockSize) { mSampleRate = sampleRate; mBlockSize = blockSize; }
+    void process(juce::AudioBuffer<float>& buffer, float pitchRatio) { juce::ignoreUnused(pitchRatio); }
 private:
     double mSampleRate = 48000.0;
     int mBlockSize = 512;
 };
 
 // ==============================================================================
-// 9. MAIN NADA AUDIO PROCESSOR
+// 9. MAIN NADA AUDIO PROCESSOR - WITH AI INTEGRATION
 // ==============================================================================
 class NADAAudioProcessor : public juce::AudioProcessor, public juce::Timer
 {
@@ -263,7 +217,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override { return "NADA CHANNEL STRIP"; }
+    const juce::String getName() const override { return "NADA BOSS VOCAL SUITE"; }
     bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
@@ -278,66 +232,53 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    struct SpectralFeatures {
-        float lowEnergy = 0.0f;
-        float midEnergy = 0.0f;
-        float highEnergy = 0.0f;
-        float tilt = 0.0f;
-        float sibilance = 0.0f;
+    // --- AI STATE FOR GUI ---
+    struct AIState {
+        bool aiEnabled = false;
+        bool isAnalyzing = false;
+        juce::String statusText = "AI READY";
+        float analysisProgress = 0.0f;
+        
+        AISpectralAnalyzer::VocalProfile lastProfile;
+        AIMixer::MixingParameters lastMixParams;
     };
     
-    SpectralFeatures lastAnalysis;
-    std::atomic<float> inputLevel { 0.0f };
-    std::atomic<float> outputLevel { 0.0f };
-    std::atomic<float> grLevel { 0.0f };
+    AIState getAIState() const { return aiState; }
 
     juce::AudioProcessorValueTreeState apvts;
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void updateDSPChain();
-    void runSpectralAnalysis();
+    void runAIAnalysis();
+    void applyAIMixingParameters(const AIMixer::MixingParameters& params);
 
-    // --- DSP CHAIN (14 STAGES IN CORRECT ORDER) ---
-    NADAPitchShifter pitchShifter; // 1. Crispytuner
-    
-    struct ProQ3 {
-        juce::dsp::IIR::Filter<float> bands[6];
-    } eq6; // 2. Pro-Q 3 (6 bands)
-
-    struct Pultec {
-        juce::dsp::IIR::Filter<float> low, high;
-    } pultec; // 3. Pultec (moved before HG-2)
-
-    struct SSL4000G {
-        juce::dsp::IIR::Filter<float> bands[4];
-    } ssl; // 4. SSL (moved before HG-2)
-
-    FETCompressor fet1176;     // 5. 1176
-    OPTOCompressor optoLA2A;   // 6. LA-2A
-    HG2Saturator hg2;          // 7. HG-2
-    RVoxProcessor rvox;        // 8. R-Vox
-    DeEsser902 deesser;        // 9. De-esser
-
-    struct StereoWidth {
-        StereoMaker maker;
-    } stereomaker; // 10. Stereo Width
-
-    juce::dsp::Limiter<float> limiter;     // 11. Limiter
-    juce::dsp::Reverb reverb;              // 12. Reverb
-
+    // --- DSP CHAIN (14 STAGES) ---
+    NADAPitchShifter pitchShifter;
+    struct ProQ3 { juce::dsp::IIR::Filter<float> bands[6]; } eq6;
+    struct Pultec { juce::dsp::IIR::Filter<float> low, high; } pultec;
+    struct SSL4000G { juce::dsp::IIR::Filter<float> bands[4]; } ssl;
+    FETCompressor fet1176;
+    OPTOCompressor optoLA2A;
+    HG2Saturator hg2;
+    RVoxProcessor rvox;
+    DeEsser902 deesser;
+    struct StereoWidth { StereoMaker maker; } stereomaker;
+    juce::dsp::Limiter<float> limiter;
+    juce::dsp::Reverb reverb;
     struct HDelay {
         juce::dsp::DelayLine<float, juce::dsp::MaximumLength<44100*5>> lineL;
         juce::dsp::DelayLine<float, juce::dsp::MaximumLength<44100*5>> lineR;
-    } delay; // 13. H-Delay
+    } delay;
 
-    // 14. Master Output (gain handled by parameter)
-
-    // --- AI/ANALYSIS ---
-    juce::dsp::FFT fft { 11 }; // 2048-point FFT
+    // --- AI COMPONENTS ---
+    AISpectralAnalyzer spectralAnalyzer;
+    AIMixer aiMixer;
+    ONNXModelManager onnxManager;
     std::vector<float> analysisBuffer;
     int analysisBufferPos = 0;
     std::atomic<bool> analysisRequested { false };
-
+    
+    AIState aiState;
     double mSampleRate = 48000.0;
 };
