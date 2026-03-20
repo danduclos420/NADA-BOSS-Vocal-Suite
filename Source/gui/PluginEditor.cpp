@@ -129,7 +129,19 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
 
     webView = std::make_unique<juce::WebBrowserComponent>(options);
     addAndMakeVisible (*webView);
-    webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
+    
+    // Robust local resource loading
+    juce::File executable = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
+    juce::File resourceFile = executable.getSiblingFile("Resources").getChildFile("index.html");
+    
+    // Fallback for different bundle structures (e.g. some DAWs or dev builds)
+    if (!resourceFile.existsAsFile())
+        resourceFile = executable.getParentDirectory().getSiblingFile("Resources").getChildFile("index.html");
+
+    if (resourceFile.existsAsFile())
+        webView->goToURL(resourceFile.toURI());
+    else
+        webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
     startTimerHz(30);
     setSize (1600, 900); 

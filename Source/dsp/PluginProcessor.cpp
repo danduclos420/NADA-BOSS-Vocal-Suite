@@ -33,6 +33,14 @@ void NADAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     
     analysisBuffer.assign(fft.getSize(), 0.0f);
     analysisBufferPos = 0;
+
+    // Reset all internal states
+    for (int i=0; i<6; ++i) eq6.bands[i].reset();
+    pultec.low.reset(); pultec.high.reset();
+    for (int i=0; i<4; ++i) ssl.bands[i].reset();
+    limiter.reset();
+    reverb.reset();
+    delay.lineL.reset(); delay.lineR.reset();
 }
 
 void NADAAudioProcessor::releaseResources() {}
@@ -136,6 +144,13 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         
         left[s] = left[s] * (1.0f - dMix*0.5f) + delL * dMix;
         right[s] = right[s] * (1.0f - dMix*0.5f) + delR * dMix;
+    }
+
+    // 14. Master Gain & Output Clip
+    float mGain = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("LIMITER_THRESH")->load());
+    for (int s = 0; s < buffer.getNumSamples(); ++s) {
+        left[s] = std::clamp(left[s] * mGain, -1.0f, 1.0f);
+        right[s] = std::clamp(right[s] * mGain, -1.0f, 1.0f);
     }
 
     outputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
@@ -282,10 +297,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
 
     // 10. Master
     params.push_back(std::make_unique<juce::AudioParameterFloat>("STEREO_WIDTH", "Width", 0.0f, 2.0f, 1.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Limiter Threshold", -24.0f, 0.0f, -0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.2f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.5f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.2f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Master Gain", -24.0f, 0.0f, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.0f));
 
     return { params.begin(), params.end() };
 }

@@ -78,8 +78,12 @@ target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib
 )
 
-# 6. Post-Build (DLL Copy)
+# 6. Post-Build (Resource & DLL Copy)
 add_custom_command(TARGET NADA_BOSS_VOCAL_SUITE POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:NADA_BOSS_VOCAL_SUITE>/Resources
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Interface/vst-gui/dist"
+    $<TARGET_FILE_DIR:NADA_BOSS_VOCAL_SUITE>/Resources
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll"
     $<TARGET_FILE_DIR:NADA_BOSS_VOCAL_SUITE>
