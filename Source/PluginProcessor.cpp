@@ -88,7 +88,6 @@ void NADAAudioProcessor::updateDSPChain()
     lim.setThreshold(-0.1f);
     lim.setRelease(50.0f);
 }
-}
 
 void NADAAudioProcessor::triggerNADAAnalysis()
 {
