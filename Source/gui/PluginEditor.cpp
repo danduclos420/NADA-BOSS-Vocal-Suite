@@ -139,7 +139,7 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
         resourceFile = executable.getParentDirectory().getSiblingFile("Resources").getChildFile("index.html");
 
     if (resourceFile.existsAsFile())
-        webView->goToURL(resourceFile.toURI());
+        webView->goToURL(juce::URL(resourceFile).toString(true));
     else
         webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
