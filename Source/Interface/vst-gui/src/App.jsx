@@ -1,141 +1,122 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 
-const Knob = ({ label, initialValue = 0.5, size = 60, unit = "" }) => {
-  const [value, setValue] = useState(initialValue);
-  const circumference = 2 * Math.PI * 28;
-  const offset = circumference - (value * 0.75 * circumference);
-
-  const handleDrag = (e) => {
-    const startY = e.clientY;
-    const startVal = value;
-    const move = (me) => {
-      const d = (startY - me.clientY) / 200;
-      setValue(Math.min(1, Math.max(0, startVal + d)));
-    };
-    const up = () => {
-      document.removeEventListener('mousemove', move);
-      document.removeEventListener('mouseup', up);
-    };
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', up);
-  };
+const Knob = ({ label, initialValue = 0.5, size = 50, color = "var(--neon-red)" }) => {
+  const [val, setVal] = useState(initialValue);
+  const circ = 2 * Math.PI * (size * 0.4);
+  const offset = circ - (val * 0.75 * circ);
 
   return (
-    <div className="knob-unit">
+    <div className="knob-unit" style={{ width: size + 20 }}>
       <div className="knob-bezel" style={{ width: size, height: size }}>
-        <svg className="glow-ring" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="28" fill="none" stroke="#000" strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={circumference * 0.25} transform="rotate(135 40 40)" />
-          <circle cx="40" cy="40" r="28" fill="none" stroke="var(--neon-red)" strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" transform="rotate(135 40 40)" style={{ filter: 'drop-shadow(0 0 3px var(--neon-red))', opacity: 0.8 }} />
+        <svg style={{ position:'absolute', top:'-5px', left:'-5px', width:size+10, height:size+10 }}>
+          <circle cx={(size+10)/2} cy={(size+10)/2} r={size*0.4} fill="none" stroke="#000" strokeWidth="2" strokeDasharray={circ} strokeDashoffset={circ*0.25} transform={`rotate(135 ${(size+10)/2} ${(size+10)/2})`} />
+          <circle cx={(size+10)/2} cy={(size+10)/2} r={size*0.4} fill="none" stroke={color} strokeWidth="2" strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" transform={`rotate(135 ${(size+10)/2} ${(size+10)/2})`} style={{ filter: `drop-shadow(0 0 3px ${color})` }} />
         </svg>
-        <div className="knob-body" onMouseDown={handleDrag} style={{ transform: `rotate(${value * 270 - 135}deg)` }}>
-          <div className="knob-tick"></div>
+        <div className="knob-body" onMouseDown={(e) => {
+           const startY = e.clientY; const startV = val;
+           const move = (me) => setVal(Math.min(1, Math.max(0, startV + (startY-me.clientY)/200)));
+           const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+           document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+        }} style={{ width: size*0.75, height: size*0.75, transform: `rotate(${val * 270 - 135}deg)` }}>
+          <div className="knob-tick" style={{ width: size*0.1, height: size*0.1 }}></div>
         </div>
       </div>
-      <div style={{ textAlign: 'center' }}>
-        <div className="label-sm">{label}</div>
-        <div className="value-sm">{(value * 100).toFixed(0)}{unit}</div>
-      </div>
+      <div className="label-sm">{label}</div>
     </div>
   );
 };
 
-const Section = ({ title, children, showLine = true }) => (
-  <div className="section-zone">
-    <div className="section-header">{title}</div>
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', alignItems: 'flex-start' }}>
-      {children}
-    </div>
-    {showLine && <div className="separator-h" style={{ marginTop: '20px' }}></div>}
+const LEDDisplay = ({ value }) => (
+  <div style={{ background:'#000', padding:'2px 4px', border:'1px solid #333', borderRadius:'2px', fontFamily:'monospace', color:'var(--neon-red)', fontSize:'14px', letterSpacing:'2px', boxShadow:'inset 0 0 5px #f00', display:'inline-block' }}>
+    {value}
   </div>
 );
 
 function App() {
   return (
     <div className="rack-chassis">
-      {/* TOP HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-             <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#444' }}>NB</span>
-          </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '900', letterSpacing: '1px' }}>NADA AUDIO</div>
-            <div style={{ fontSize: '10px', color: '#444', letterSpacing: '2px' }}>PRO VOCALIST SUITE</div>
-          </div>
+      {/* TIER 1: THE MASTER BRIDGE */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', height:'35%' }}>
+        
+        {/* TOP LEFT: TMT COMP (1176 Style) */}
+        <div style={{ width:'25%', display:'flex', flexWrap:'wrap', gap:'15px', justifyContent:'center' }}>
+           <div style={{ width:'100%', textAlign:'center', marginBottom:'10px' }} className="label-sm">TMT COMP (FET)</div>
+           <LEDDisplay value="01" /> <Knob label="RATIO" size={40} /> <LEDDisplay value="01" />
+           <Knob label="INPUT" size={60} /> <Knob label="OUTPUT" size={60} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-           <div className="label-sm">AI ANALYSIS</div>
-           <div className="ai-gold-btn"></div>
-           <div className="label-sm" style={{ color: 'var(--gold)' }}>ACTIVE</div>
+        {/* CENTER: THE GIGA METER PANEL */}
+        <div style={{ width:'40%', height:'100%', background:'rgba(0,0,0,0.2)', borderLeft:'1px solid #333', borderRight:'1px solid #333', position:'relative', padding:'10px' }}>
+           <div style={{ textAlign:'center' }} className="label-sm">AI MASTER CORE</div>
+           <div style={{ display:'flex', justifyContent:'center', marginTop:'10px' }}>
+              <div className="ai-gold-btn" style={{ width:'40px', height:'40px' }}></div>
+           </div>
+           <div style={{ display:'flex', justifyContent:'space-between', flex:1, marginTop:'20px' }}>
+              <div className="meter-strip" style={{height:'120px'}}><div className="meter-fill" style={{height:'80%'}}></div></div>
+              <div style={{ display:'flex', flexDirection:'column', gap:'10px', width:'70%' }}>
+                 <div style={{ height:'2px', background:'#333' }}></div>
+                 <div style={{ height:'2px', background:'#333' }}></div>
+                 <div style={{ height:'2px', background:'var(--neon-red)', boxShadow:'var(--neon-glow)' }}></div>
+              </div>
+              <div className="meter-strip" style={{height:'120px'}}><div className="meter-fill" style={{height:'90%'}}></div></div>
+           </div>
+        </div>
+
+        {/* TOP RIGHT: LIMITER */}
+        <div style={{ width:'25%', textAlign:'center' }}>
+           <div className="label-sm">TP LIMITER</div>
+           <Knob label="FOUNDATION" size={100} initialValue={0.9} />
+           <div style={{marginTop:'10px'}} className="value-sm">-10.0 LUFS</div>
         </div>
       </div>
 
       <div className="separator-h"></div>
 
-      {/* CORE RACK GRID */}
-      <div className="main-grid">
-        {/* COLUMN 1: CORRECTION */}
-        <div className="section-zone" style={{ borderRight: '1px solid rgba(255,255,255,0.03)', paddingRight: '20px' }}>
-           <Section title="PITCH CORRECTION">
-              <Knob label="RETUNE" size={80} initialValue={0.8} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                 <Knob label="KEY" size={40} initialValue={0.3} />
-                 <Knob label="HMN" size={40} initialValue={0.4} />
-              </div>
-           </Section>
-           <Section title="SURGERY">
-              <Knob label="SSSH" size={50} />
-              <Knob label="MUD" size={50} />
-           </Section>
-        </div>
-
-        {/* COLUMN 2: DYNAMICS */}
-        <div className="section-zone" style={{ borderRight: '1px solid rgba(255,255,255,0.03)', paddingRight: '20px' }}>
-           <Section title="1176 FET">
-              <Knob label="IN" initialValue={0.4} />
-              <div className="meter-strip"><div className="meter-fill" style={{ height: '60%' }}></div></div>
-              <Knob label="OUT" initialValue={0.5} />
-           </Section>
-           <Section title="LA-2A OPTO">
-              <Knob label="PEAK" size={80} initialValue={0.7} />
-              <Knob label="GAIN" size={50} initialValue={0.3} />
-           </Section>
-        </div>
-
-        {/* COLUMN 3: TONE */}
-        <div className="section-zone" style={{ borderRight: '1px solid rgba(255,255,255,0.03)', paddingRight: '20px' }}>
-           <Section title="TONE COLOR">
-              <Knob label="AIR" initialValue={0.9} />
-              <Knob label="SSL" size={50} initialValue={0.2} />
-           </Section>
-           <Section title="HARMONICS">
-              <Knob label="SAT" size={70} initialValue={0.6} />
-              <Knob label="STERE" size={50} initialValue={0.8} />
-           </Section>
-        </div>
-
-        {/* COLUMN 4: MASTER */}
-        <div className="section-zone">
-           <Section title="SPACE">
-              <Knob label="REV" size={50} />
-              <Knob label="DLY" size={50} />
-           </Section>
-           <Section title="MASTERING" showLine={false}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                 <div className="label-sm" style={{ color: 'var(--neon-red)' }}>TP LIMITER</div>
-                 <Knob label="CEIL" size={90} initialValue={0.9} />
-                 <div style={{ fontSize: '12px', fontWeight: '900', color: '#333' }}>-10.0 LUFS</div>
-              </div>
-           </Section>
-        </div>
+      {/* TIER 2: TONE & SURGERY */}
+      <div style={{ display:'flex', justifyContent:'center', gap:'40px', padding:'20px 0' }}>
+         <div style={{ display:'flex', gap:'20px' }}>
+            <div className="label-sm" style={{ alignSelf:'center' }}>DE-ESSER</div>
+            <Knob label="FREQ" size={45} /> <Knob label="REDUX" size={45} />
+         </div>
+         <div className="separator-v"></div>
+         <div style={{ display:'flex', gap:'15px' }}>
+            <div className="label-sm" style={{ alignSelf:'center' }}>TONE EQ</div>
+            <Knob label="LOW" size={40} /> <Knob label="MID" size={40} /> <Knob label="HIGH" size={40} /> <Knob label="AIR" size={40} />
+         </div>
+         <div className="separator-v"></div>
+         <div style={{ display:'flex', gap:'20px' }}>
+            <div className="label-sm" style={{ alignSelf:'center' }}>STEREO</div>
+            <Knob label="WIDTH" size={50} color="var(--gold)" />
+         </div>
       </div>
 
-      {/* FOOTER */}
       <div className="separator-h"></div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0' }}>
-         <div className="label-sm">S-VERSION 12.55</div>
-         <div className="label-sm">PLUGIN ALLIANCE GRADE</div>
+
+      {/* TIER 3: FINAL EQ & FX BUS */}
+      <div style={{ display:'flex', justifyContent:'center', gap:'30px', padding:'20px 0' }}>
+         <div style={{ display:'flex', gap:'15px' }}>
+            <div className="label-sm" style={{ alignSelf:'center' }}>HARMONICS</div>
+            <Knob label="SSL-E" size={40} /> <Knob label="SAT" size={40} />
+         </div>
+         <div className="separator-v"></div>
+         <div style={{ display:'flex', gap:'10px' }}>
+            <div className="label-sm" style={{ alignSelf:'center' }}>BUS FX</div>
+            <Knob label="REV" size={35} /> <Knob label="DLY" size={35} />
+         </div>
+         <div className="separator-v"></div>
+         <div style={{ display:'flex', gap:'10px' }}>
+            <div className="label-sm" style={{ alignSelf:'center' }}>SURGERY</div>
+            <Knob label="MUD" size={35} color="#444" />
+         </div>
+      </div>
+
+      {/* FOOTER BRANDS */}
+      <div style={{ position:'absolute', bottom:'20px', left:'40px', display:'flex', gap:'20px' }}>
+         <div style={{ fontSize:'24px', fontWeight:'900', color:'#444', fontFamily:'Bebas Neue' }}>NADA BOSS</div>
+         <div className="label-sm" style={{ alignSelf:'flex-end' }}>V12.0 // ULTIMATE RACK</div>
+      </div>
+      <div style={{ position:'absolute', bottom:'20px', right:'40px' }} className="label-sm">
+         PLUGIN ALLIANCE / BRAINWORX GRADE
       </div>
     </div>
   );
