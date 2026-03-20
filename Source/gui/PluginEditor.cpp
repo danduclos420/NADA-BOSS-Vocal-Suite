@@ -126,7 +126,7 @@ void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 
     // --- 3. LOGO & STATUS PANEL (AI READY) ---
     g.setColour (juce::Colours::white.withAlpha (0.1f));
-    g.setFont (juce::Font ("Inter", 12.0f, juce::Font::bold).withExtraKerning (0.5f));
+    g.setFont (juce::Font ("Inter", 12.0f, juce::Font::bold));
     
     auto headerArea = getLocalBounds().removeFromTop (60).reduced (20, 10);
     g.drawText ("NADA BOSS // ELITE CHANNEL STRIP", headerArea, juce::Justification::centredLeft);
