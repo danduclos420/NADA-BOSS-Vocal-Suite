@@ -14,7 +14,7 @@ NADAAudioProcessor::~NADAAudioProcessor() {}
 
 void NADAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    currentSampleRate = sampleRate;
+    mSampleRate = sampleRate;
     juce::dsp::ProcessSpec spec { sampleRate, (juce::uint32)samplesPerBlock, 2 };
     
     pitchShifter.prepare(sampleRate, samplesPerBlock);
@@ -142,7 +142,7 @@ void NADAAudioProcessor::updateDSPChain()
         float f = apvts.getRawParameterValue(prefix + "FREQ")->load();
         float g = apvts.getRawParameterValue(prefix + "GAIN")->load();
         float q = apvts.getRawParameterValue(prefix + "Q")->load();
-        *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, f, q, juce::Decibels::decibelsToGain(g));
+        *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g));
     }
 
     // 3. 1176 Coefficients
@@ -153,13 +153,13 @@ void NADAAudioProcessor::updateDSPChain()
     // 5. Pultec
     float pLowBoost = apvts.getRawParameterValue("PULTEC_LOW_BOOST")->load();
     float pHighBoost = apvts.getRawParameterValue("PULTEC_HIGH_BOOST")->load();
-    *pultec.low.coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(currentSampleRate, 60.0f, 0.7f, juce::Decibels::decibelsToGain(pLowBoost));
-    *pultec.high.coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, 10000.0f, 0.7f, juce::Decibels::decibelsToGain(pHighBoost));
+    *pultec.low.coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(mSampleRate, 60.0f, 0.7f, juce::Decibels::decibelsToGain(pLowBoost));
+    *pultec.high.coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(mSampleRate, 10000.0f, 0.7f, juce::Decibels::decibelsToGain(pHighBoost));
 
     // 6. SSL
     for (int i=0; i<4; ++i) {
         float f = 200.0f * std::pow(4.0f, (float)i);
-        *ssl.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, f, 1.0f, 1.0f);
+        *ssl.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, 1.0f, 1.0f);
     }
 
     // 11. Limiter
@@ -252,9 +252,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.2f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.5f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.2f));
-
-    return { params.begin(), params.end() };
-}
 
     return { params.begin(), params.end() };
 }

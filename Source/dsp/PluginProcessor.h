@@ -106,61 +106,7 @@ private:
 // ==============================================================================
 // 4. MAIN PROCESSOR
 // ==============================================================================
-class NADAAudioProcessor  : public juce::AudioProcessor, public juce::Timer
-{
-public:
-    NADAAudioProcessor();
-    ~NADAAudioProcessor() override;
-
-    void timerCallback() override
-    {
-        if (analysisRequested.load())
-        {
-            runSpectralAnalysis();
-            analysisRequested = false;
-        }
-    }
-
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
-    void releaseResources() override;
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
-    
-    juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override { return true; }
-
-    const juce::String getName() const override { return "NADA BOSS VOCAL SUITE"; }
-    bool acceptsMidi() const override { return true; }
-    bool producesMidi() const override { return false; }
-    double getTailLengthSeconds() const override { return 0.0; }
-
-    int getNumPrograms() override { return 1; }
-    int getCurrentProgram() override { return 0; }
-    void setCurrentProgram (int index) override {}
-    const juce::String getProgramName (int index) override { return {}; }
-    void changeProgramName (int index, const juce::String& newName) override {}
-
-    void triggerNADAAnalysis();
-    
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
-
-    // --- PUBLIC FOR EDITOR ACCESS ---
-    struct SpectralFeatures {
-        float lowEnergy = 0.0f;
-        float midEnergy = 0.0f;
-        float highEnergy = 0.0f;
-        float tilt = 0.0f;
-        float sibilance = 0.0f;
-    };
-    SpectralFeatures lastAnalysis;
-    std::atomic<float> inputLevel { 0.0f };
-    std::atomic<float> outputLevel { 0.0f };
-    std::atomic<float> grLevel { 0.0f };
-
-    juce::AudioProcessorValueTreeState apvts;
-
-private:
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+// --- CLASS DECLARATIONS MOVED BELOW HELPER CLASSES ---
 
 // ==============================================================================
 // 5. SATURATION/DISTORTION (HG-2 Style)
@@ -219,7 +165,7 @@ public:
         *filter.coefficients = *juce::dsp::IIR::Coefficients<float>::makeBandPass(sr, 6000.0f, 1.0f);
     }
     float process(float in, float range) {
-        float sibilance = filter.processSample(0, in);
+        float sibilance = filter.processSample(in);
         float reduction = 1.0f - (range * std::abs(sibilance));
         return in * std::max(0.2f, reduction);
     }
@@ -344,7 +290,7 @@ private:
 
     void updateDSPChain();
 
-    double currentSampleRate = 44100.0;
+    double mSampleRate = 44100.0;
 
     // --- AI ANALYSIS (Legit Spectral Engine) ---
     ONNXModelManager onnxManager;
