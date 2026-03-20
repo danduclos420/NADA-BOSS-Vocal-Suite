@@ -29,14 +29,13 @@ juce_add_plugin(NADA_BOSS_VOCAL_SUITE
 # 3. Generate JuceHeader.h
 juce_generate_juce_header(NADA_BOSS_VOCAL_SUITE)
 
-# 4. Source Files - NATIVE ONLY (No React/Web UI)
+# 4. Source Files - NATIVE JUCE ONLY
 target_sources(NADA_BOSS_VOCAL_SUITE PRIVATE
     Source/dsp/PluginProcessor.cpp
     Source/dsp/PluginProcessor.h
     Source/gui/PluginEditor.cpp
     Source/gui/PluginEditor.h
     Source/ai/ONNXModelManager.h
-    Source/dsp/NADAPitchShifter.h
 )
 
 target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE 
@@ -45,7 +44,7 @@ target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE
     Source/ai
 )
 
-# 5. Dependencies
+# 5. Compile Definitions
 target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     PUBLIC
     JUCE_WEB_BROWSER=0
@@ -54,16 +53,7 @@ target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
-# --- ONNX RUNTIME (REAL AI) ---
-include(FetchContent)
-FetchContent_Declare(
-    onnxruntime
-    URL https://github.com/microsoft/onnxruntime/releases/download/v1.18.0/onnxruntime-win-x64-1.18.0.zip
-)
-FetchContent_MakeAvailable(onnxruntime)
-
-target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE ${onnxruntime_SOURCE_DIR}/include)
-
+# 6. Link JUCE Libraries
 target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
@@ -75,10 +65,20 @@ target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     juce::juce_dsp
     juce::juce_gui_extra
     juce::juce_graphics
-    ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib
 )
 
-# 6. Post-Build (DLL Copy)
+# 7. ONNX Runtime (Optional - for AI)
+include(FetchContent)
+FetchContent_Declare(
+    onnxruntime
+    URL https://github.com/microsoft/onnxruntime/releases/download/v1.18.0/onnxruntime-win-x64-1.18.0.zip
+)
+FetchContent_MakeAvailable(onnxruntime)
+
+target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE ${onnxruntime_SOURCE_DIR}/include)
+target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib)
+
+# 8. Post-Build DLL Copy
 add_custom_command(TARGET NADA_BOSS_VOCAL_SUITE POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll"
