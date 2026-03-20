@@ -29,10 +29,18 @@ juce_generate_juce_header(NADA_BOSS_VOCAL_SUITE)
 
 # 4. Source Files
 target_sources(NADA_BOSS_VOCAL_SUITE PRIVATE
-    Source/PluginProcessor.cpp
-    Source/PluginProcessor.h
-    Source/PluginEditor.cpp
-    Source/PluginEditor.h
+    Source/dsp/PluginProcessor.cpp
+    Source/dsp/PluginProcessor.h
+    Source/gui/PluginEditor.cpp
+    Source/gui/PluginEditor.h
+    Source/ai/ONNXModelManager.h
+    Source/dsp/NADAPitchShifter.h
+)
+
+target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE 
+    Source/dsp
+    Source/gui
+    Source/ai
 )
 
 # 5. Dependencies
