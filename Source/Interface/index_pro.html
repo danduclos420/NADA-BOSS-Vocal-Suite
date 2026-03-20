@@ -5,124 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style_pro.css">
-    <title>NADA BOSS [LEGENDARY] PRO</title>
+    <title>NADA BOSS GIGA-RACK</title>
 </head>
 <body>
-    <div class="rack-container">
-        <!-- HEADER SECTION -->
-        <header class="rack-header">
-            <div>
-                <h1>NADA AUDIO</h1>
-                <h2>PRO-VOCALIST SUITE // ULTIMATE</h2>
-            </div>
-            
-            <div class="ai-centerpiece"></div>
+    <div class="rack-frame">
+        <div class="brand">
+            <h1>NADA AUDIO</h1>
+            <h2 class="label-bebas" style="color:#444">PRO-VOCALIST SUITE</h2>
+        </div>
+        
+        <div class="vst-spec">
+            <h1>VST3</h1>
+            <h2 class="label-bebas" style="color:var(--neon-red)">4K RESOLUTION</h2>
+        </div>
 
-            <div style="text-align: right;">
-                <h1>VST3</h1>
-                <h2 style="color:var(--neon-red)">4K MASTERING GRADE</h2>
-            </div>
-        </header>
+        <div class="ai-header">
+            <div class="ai-button-master"></div>
+        </div>
 
-        <!-- ROW 1: PRE-PROCESSING -->
-        <div class="module-row">
-            <section class="module autotune">
-                <div class="module-title">1. AUTOTUNE CONTROL</div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="led-meter-v"><div class="led-bar" style="height: 60%"></div></div>
-                    <div class="knob-container">
-                        <div class="knob-pro large"></div>
-                        <label>PITCH</label>
-                    </div>
-                    <div class="knob-container">
-                        <div class="knob-pro"></div>
-                        <label>SPEED</label>
+        <div class="giga-grid">
+            <!-- MODULE 1: AUTOTUNE -->
+            <section class="mod-unit" style="grid-column: span 2;">
+                <h3>01. AUTOTUNE ENGINE</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro large"></div><span class="label-bebas">PITCH</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">SPEED</span></div>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <button class="label-bebas" style="background:#222; border:1px solid #444; color:#f00;">C# MINOR</button>
+                        <button class="label-bebas" style="background:#111; border:1px solid #333;">CHROMATIC</button>
                     </div>
                 </div>
             </section>
 
-            <section class="module eq-mud">
-                <div class="module-title">2. REDUCTIVE EQ (MUD)</div>
+            <!-- MODULE 2 & 3: REDUCTIVE EQ & FET -->
+            <section class="mod-unit">
+                <h3>02-03. INPUT DYNAMICS</h3>
                 <div style="display:flex; justify-content:space-around;">
-                    <div class="knob-container"><div class="knob-pro mini"></div><label>FREQ</label></div>
-                    <div class="knob-container"><div class="knob-pro"></div><label>DEPTH</label></div>
+                    <div class="knob-group"><div class="knob-pro mini"></div><span class="label-bebas">MUD EQ</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">FET COMP</span></div>
                 </div>
             </section>
 
-            <section class="module fet-1176">
-                <div class="module-title">3. FET 1176 COMP</div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="led-meter-v"><div class="led-bar" style="height: 40%"></div></div>
-                    <div class="knob-container"><div class="knob-pro"></div><label>THRESH</label></div>
-                    <div class="knob-container"><div class="knob-pro mini"></div><label>MAKEUP</label></div>
-                </div>
+            <!-- MODULE 4: OPTO -->
+            <section class="mod-unit">
+                <h3>04. OPTO LEVELER</h3>
+                <div class="knob-group"><div class="knob-pro large" style="transform:rotate(-45deg)"></div><span class="label-bebas">PEAK REDUCTION</span></div>
             </section>
-        </div>
 
-        <!-- ROW 2: TONE & SURGERY -->
-        <div class="module-row">
-            <section class="module opto-la2a">
-                <div class="module-title">4. OPTO LA-2A LEVEL</div>
+            <!-- MODULE 5 & 6: EQP-A & SSL -->
+            <section class="mod-unit">
+                <h3>05-06. TONAL COLOR</h3>
                 <div style="display:flex; justify-content:space-around;">
-                    <div class="knob-container"><div class="knob-pro large" style="transform: rotate(45deg);"></div><label>PEAK RED.</label></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">AIR (EQP-A)</span></div>
+                    <div class="knob-group"><div class="knob-pro mini"></div><span class="label-bebas">SSL CONSOLE</span></div>
                 </div>
             </section>
 
-            <section class="module eqp-a">
-                <div class="module-title">5. EQP-A AIR SHELF</div>
+            <!-- MODULE 7 & 8: SAT & FINAL COMP -->
+            <section class="mod-unit">
+                <h3>07-08. GRAIN & PUNCH</h3>
                 <div style="display:flex; justify-content:space-around;">
-                    <div class="knob-container"><div class="knob-pro"></div><label>AIR</label></div>
-                    <div class="knob-container"><div class="knob-pro"></div><label>WARMTH</label></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">SATURATION</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">FINAL COMP</span></div>
                 </div>
             </section>
 
-            <section class="module deesser">
-                <div class="module-title">9. DE-ESSER SSSS</div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="led-meter-v"><div class="led-bar" style="height: 10%; background: #0f0;"></div></div>
-                    <div class="knob-container"><div class="knob-pro"></div><label>AMOUNT</label></div>
-                </div>
-            </section>
-        </div>
-
-        <!-- ROW 3: COLOR & FX -->
-        <div class="module-row">
-             <section class="module ssl-sat">
-                <div class="module-title">6 & 7. SSL COLOR & SAT</div>
-                <div style="display:flex; justify-content:space-around;">
-                    <div class="knob-container"><div class="knob-pro mini"></div><label>SSL</label></div>
-                    <div class="knob-container"><div class="knob-pro"></div><label>SAT GRAIN</label></div>
+            <!-- MODULE 9 & 10: DE-ESS & FINAL EQ -->
+            <section class="mod-unit">
+                <h3>09-10. SURGERY</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="led-meter-seg"><div class="segment-fill" style="height:20%"></div></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">DE-ESSER</span></div>
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">FINAL EQ</span></div>
                 </div>
             </section>
 
-            <section class="module stereo">
-                <div class="module-title">11. STEREO WIDTH</div>
-                <div class="knob-container"><div class="knob-pro" style="margin: 0 auto;"></div><label>WIDER</label></div>
+            <!-- MODULE 11: WIDTH -->
+            <section class="mod-unit">
+                <h3>11. STEREO WIDTH</h3>
+                <div class="knob-group"><div class="knob-pro large"></div><span class="label-bebas">WIDEN / MONO</span></div>
             </section>
 
-            <section class="module bus-fx">
-                <div class="module-title">13 & 14. BUS EFFECTS</div>
-                <div style="display:flex; justify-content:space-around;">
-                    <div class="knob-container"><div class="knob-pro"></div><label>REVERB</label></div>
-                    <div class="knob-container"><div class="knob-pro"></div><label>DELAY</label></div>
-                </div>
-            </section>
-        </div>
-
-        <!-- FOOTER: MASTERING -->
-        <div class="module-row" style="margin-bottom:0;">
-            <section class="module final-chain" style="display:flex; align-items:center; justify-content:space-between;">
-                <div class="module-title">8 & 12. FINAL CHAIN & LIMITER</div>
-                <div style="display:flex; align-items:center; gap:40px; margin: 0 auto;">
-                    <div class="knob-container"><div class="knob-pro mini"></div><label>FINAL COMP</label></div>
-                    <div class="knob-container"><div class="knob-pro large"></div><label>-10 LUFS LIMIT</label></div>
-                    <div class="meter-group" style="display:flex; gap:5px;">
-                        <div class="led-meter-v" style="height:150px; width:20px;"><div class="led-bar" style="height: 85%;"></div></div>
-                        <div class="led-meter-v" style="height:150px; width:20px;"><div class="led-bar" style="height: 85%;"></div></div>
+            <!-- MODULE 12: LIMITER -->
+            <section class="mod-unit">
+                <h3>12. TRUE PEAK LIMITER</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro"></div><span class="label-bebas">-10 LUFS</span></div>
+                    <div style="display:flex; gap:2px;">
+                        <div class="led-meter-seg"><div class="segment-fill" style="height:90%"></div></div>
+                        <div class="led-meter-seg"><div class="segment-fill" style="height:90%"></div></div>
                     </div>
+                </div>
+            </section>
+
+            <!-- MODULE 13 & 14: BUS FX -->
+            <section class="mod-unit" style="grid-column: span 3;">
+                <h3>13-14. SEND EFFECTS (BUS)</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-group"><div class="knob-pro large"></div><span class="label-bebas">REVERB (CHAMBER)</span></div>
+                    <div class="active-led on"></div>
+                    <div class="knob-group"><div class="knob-pro large"></div><span class="label-bebas">DELAY (DOUBLER)</span></div>
                 </div>
             </section>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
