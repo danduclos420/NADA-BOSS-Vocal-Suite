@@ -4,96 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>NADA BOSS MASTER DESK</title>
+    <title>NADA BOSS ULTIMATE</title>
 </head>
 <body>
     <div class="master-desk">
-        <!-- TOP NAV -->
-        <header class="top-bar">
-            <div class="logo-area">
-                <h1 class="logo">NADA BOSS</h1>
-                <span class="v-tag">V3.0 GOLD // MASTER DESK</span>
-            </div>
-            <div class="master-controls">
-                <button id="btn-master-bypass">BYPASS</button>
-                <div class="ai-brain-led">AI ACTIVE</div>
-            </div>
+        <!-- HEADER -->
+        <header class="rack-slot" style="height: 60px; padding: 0 20px; border-radius: 0;">
+            <div class="logo" style="color:#fff; font-weight:900; font-size:24px;">NADA <span style="color:var(--neon-red)">BOSS</span></div>
+            <button class="btn-gold-ai">ACTIVATE NADA IA</button>
+            <div class="v-tag" style="font-size:9px; color:#555">ULTIMATE EDITION // MASTERING GRADE</div>
         </header>
 
-        <!-- RACK ROW 1: AI & PITCH -->
-        <div class="rack-row" id="row-pitch">
-            <div class="module-label">AUTOTUNE PRO</div>
-            <div class="controls">
-                <div class="knob-group">
-                    <label>RETUNE SPEED</label>
-                    <div class="knob medium" id="knob-speed"><div class="indicator"></div></div>
+        <!-- MAIN RACK -->
+        <main class="rack-grid" style="display: grid; grid-template-rows: 1fr 1fr; gap: 4px; padding: 4px;">
+            <!-- ROW 1: AUTOTUNE & DYNAMICS -->
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
+                <div class="rack-slot">
+                    <div class="slot-label">Autotune Engine</div>
+                    <div class="knob-container">
+                        <div class="knob-hw" id="knob-speed"></div>
+                        <div class="knob-label">SPEED</div>
+                    </div>
+                    <div class="selector-container" style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="hw-selector" id="sel-key">C#</div>
+                        <div class="hw-selector" id="sel-scale">MAJOR</div>
+                    </div>
                 </div>
-                <div class="selector-group">
-                    <select id="sel-key"><option>C</option><option>C#</option><option>D</option></select>
-                    <select id="sel-scale"><option>Major</option><option>Minor</option></select>
+                <div class="rack-slot">
+                    <div class="slot-label">Precision Dynamics (FET/OPTO)</div>
+                    <div class="knob-container"><div class="knob-hw" id="knob-fet-in"></div><div class="knob-label">INPUT</div></div>
+                    <div class="knob-container"><div class="knob-hw" id="knob-fet-out"></div><div class="knob-label">OUTPUT</div></div>
+                    <div class="knob-container"><div class="knob-hw" id="knob-opto-red"></div><div class="knob-label">OPTO RED</div></div>
+                    <div class="vu-display"><div class="vu-bar" id="vu-gr"></div></div>
                 </div>
-                <div class="led-display" id="display-note">C#</div>
             </div>
-        </div>
 
-        <!-- RACK ROW 2: DYNAMICS (1176 / LA-2A) -->
-        <div class="rack-row dual" id="row-dynamics">
-            <div class="sub-module" id="mod-1176">
-                <div class="module-label">1176 FET COMPRESSOR</div>
-                <div class="controls">
-                    <div class="knob-group">
-                        <label>INPUT</label>
-                        <div class="knob" id="knob-fet-in"><div class="indicator"></div></div>
-                    </div>
-                    <div class="ratio-buttons">
-                        <button class="active">4</button><button>8</button><button>12</button><button>20</button>
-                    </div>
-                    <div class="knob-group">
-                        <label>OUTPUT</label>
-                        <div class="knob" id="knob-fet-out"><div class="indicator"></div></div>
-                    </div>
+            <!-- ROW 2: TONAL & FX -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 4px;">
+                <div class="rack-slot">
+                    <div class="slot-label">Tonal Surgery (EQP-A / SSL)</div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">BASS</div></div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">MID</div></div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">AIR</div></div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">SSL DRIVE</div></div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">DE-ESSER</div></div>
+                </div>
+                <div class="rack-slot">
+                    <div class="slot-label">Spatial & Time</div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">WIDTH</div></div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">REVERB</div></div>
+                    <div class="knob-container"><div class="knob-hw"></div><div class="knob-label">DELAY</div></div>
                 </div>
             </div>
-            <div class="sub-module" id="mod-la2a">
-                <div class="module-label">LA-2A OPTO LEVELLER</div>
-                <div class="controls">
-                    <div class="knob-group">
-                        <label>PEAK RED.</label>
-                        <div class="knob" id="knob-opto-red"><div class="indicator"></div></div>
-                    </div>
-                    <div class="knob-group">
-                        <label>GAIN</label>
-                        <div class="knob" id="knob-opto-gain"><div class="indicator"></div></div>
-                    </div>
+        </main>
+
+        <!-- FOOTER: PAZ ANALYZER -->
+        <footer class="rack-slot" style="margin: 0 8px 8px 8px; height: 160px; display: grid; grid-template-columns: 1fr 1fr 150px; gap: 20px;">
+            <div class="paz-box" style="background:#000; border:1px solid #333; height:130px;"><canvas id="spec"></canvas></div>
+            <div class="paz-box" style="background:#000; border:1px solid #333; height:130px;"><canvas id="gonio"></canvas></div>
+            <div class="master-out">
+                <div class="knob-container">
+                    <div class="knob-hw" style="width:70px; height:70px;"></div>
+                    <div class="knob-label">LIMITER</div>
                 </div>
-            </div>
-        </div>
-
-        <!-- RACK ROW 3: TONAL & TEXTURE -->
-        <div class="rack-row" id="row-tonal">
-             <div class="module-label">TONAL SURGERY & COLOR</div>
-             <div class="controls">
-                <div class="knob-group"><label>BASS</label><div class="knob mini"><div class="indicator"></div></div></div>
-                <div class="knob-group"><label>MID</label><div class="knob mini"><div class="indicator"></div></div></div>
-                <div class="knob-group"><label>AIR</label><div class="knob mini"><div class="indicator"></div></div></div>
-                <div class="v-divider"></div>
-                <div class="knob-group"><label>DE-ESSER</label><div class="knob"><div class="indicator"></div></div></div>
-                <div class="knob-group"><label>SSL DRIVE</label><div class="knob"><div class="indicator"></div></div></div>
-             </div>
-        </div>
-
-        <!-- ANALYZER & MASTER -->
-        <footer class="paz-footer">
-            <div class="paz-analyzer">
-                <canvas id="paz-spectrum"></canvas>
-            </div>
-            <div class="paz-stereo">
-                <canvas id="paz-goniometer"></canvas>
-            </div>
-            <div class="master-output">
-                <div class="vu-meter"><div class="needle" id="needle-master"></div></div>
-                <div class="knob" id="knob-limiter"><div class="indicator"></div></div>
-                <label>LIMITER</label>
             </div>
         </footer>
     </div>
