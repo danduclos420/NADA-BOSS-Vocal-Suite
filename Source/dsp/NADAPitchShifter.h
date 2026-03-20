@@ -14,8 +14,8 @@ public:
         delayLineL.prepare({ sr, (juce::uint32)maxBlockSize, 2 });
         delayLineR.prepare({ sr, (juce::uint32)maxBlockSize, 2 });
         
-        delayLineL.setMaximumDelayInSamples(sr * 0.1); // 100ms max shift buffer
-        delayLineR.setMaximumDelayInSamples(sr * 0.1);
+        delayLineL.setMaximumDelayInSamples((double)sr * 0.1); 
+        delayLineR.setMaximumDelayInSamples((double)sr * 0.1);
         
         writePos = 0;
         readPos1 = 0.0;

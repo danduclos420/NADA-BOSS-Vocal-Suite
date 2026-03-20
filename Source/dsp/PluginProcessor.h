@@ -19,8 +19,8 @@ public:
     }
     
     void updateCoefficients(float attackMs, float releaseMs) {
-        attCoef = std::exp(-1.0f / (attackMs * 0.001f * sampleRate));
-        relCoef = std::exp(-1.0f / (releaseMs * 0.001f * sampleRate));
+        attCoef = (float)std::exp(-1.0f / (attackMs * 0.001f * (float)sampleRate));
+        relCoef = (float)std::exp(-1.0f / (releaseMs * 0.001f * (float)sampleRate));
     }
 
     float process(float in, float threshold, float ratio) {
@@ -58,9 +58,9 @@ class OPTOCompressor {
 public:
     void prepare(double sr) { 
         sampleRate = sr; 
-        attCoef = std::exp(-1.0f / (0.010f * sampleRate)); // Fixed 10ms attack
-        relCoefSlow = std::exp(-1.0f / (2.0f * sampleRate));
-        relCoefFast = std::exp(-1.0f / (0.060f * sampleRate));
+        attCoef = (float)std::exp(-1.0f / (0.010f * (float)sampleRate)); // Fixed 10ms attack
+        relCoefSlow = (float)std::exp(-1.0f / (2.0f * (float)sampleRate));
+        relCoefFast = (float)std::exp(-1.0f / (0.060f * (float)sampleRate));
     }
     float process(float in, float peakRed) {
         float absIn = std::abs(in);

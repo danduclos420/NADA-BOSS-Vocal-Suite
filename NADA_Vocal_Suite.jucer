@@ -27,7 +27,8 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <VS2022 targetFolder="Builds/VisualStudio2022" headerPath="../../Source/dsp;../../Source/gui;../../Source/ai">
+    <VS2022 targetFolder="Builds/VisualStudio2022" headerPath="../../Source/dsp;../../Source/gui;../../Source/ai"
+            preprocessorDefinitions="JUCE_USE_WIN_WEBVIEW2=1">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="NADA BOSS Vocal Suite" headerPath="c:\mes apps\onnxruntime\onnxruntime-win-x64-1.16.3\include;../../Source/dsp;../../Source/gui;../../Source/ai;../../JuceLibraryCode"
                        libraryPath="c:\mes apps\onnxruntime\onnxruntime-win-x64-1.16.3\lib"

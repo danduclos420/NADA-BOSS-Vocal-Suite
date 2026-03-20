@@ -68,6 +68,8 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     float dsRange = apvts.getRawParameterValue("DEESSER_RANGE")->load();
     float stWidth = apvts.getRawParameterValue("STEREO_WIDTH")->load();
 
+    juce::ignoreUnused(speed, stWidth);
+
     // 1. Pitch (Crispytuner)
     float pitchRatio = std::pow(2.0f, userPitch / 12.0f);
     pitchShifter.process(buffer, pitchRatio);
