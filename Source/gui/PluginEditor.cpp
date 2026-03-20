@@ -86,6 +86,7 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
 {
     // --- 1. SETUP WEB VIEW ---
     auto options = juce::WebBrowserComponent::Options{}
+        .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
         .withResourceProvider ([this](const juce::String& url) {
             auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
             
