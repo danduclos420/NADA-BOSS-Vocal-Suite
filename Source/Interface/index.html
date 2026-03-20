@@ -4,83 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>NADA BOSS V3</title>
+    <title>NADA BOSS MASTER DESK</title>
 </head>
 <body>
-    <div class="rack-chassis">
-        <header>
-            <div class="brand">
+    <div class="master-desk">
+        <!-- TOP NAV -->
+        <header class="top-bar">
+            <div class="logo-area">
                 <h1 class="logo">NADA BOSS</h1>
-                <p class="subtitle">ULTIMATE SINFUL METAL // V3.0</p>
+                <span class="v-tag">V3.0 GOLD // MASTER DESK</span>
             </div>
-            <div class="analyzer-screen">
-                <canvas id="canvas-analyzer"></canvas>
+            <div class="master-controls">
+                <button id="btn-master-bypass">BYPASS</button>
+                <div class="ai-brain-led">AI ACTIVE</div>
             </div>
         </header>
 
-        <main class="rack-slots">
-            <!-- SLOT 1: AI & AUTOTUNE -->
-            <section class="slot" id="slot-ai">
-                <div class="slot-label">STAGE 1: AI TREATMENT</div>
-                <div class="controls-grid">
-                    <div class="control-group">
-                        <label>RETUNE SPEED</label>
-                        <div class="knob large" id="knob-speed"><div class="indicator"></div></div>
-                    </div>
-                    <div class="selectors">
-                        <select id="select-key">
-                            <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option>
-                            <option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option>
-                            <option>A#</option><option>B</option>
-                        </select>
-                        <select id="select-scale">
-                            <option>Major</option><option>Minor</option>
-                        </select>
-                    </div>
-                    <div class="mini-display">
-                        <div class="pitch-info">DETECTION: <span id="pitch-val">--</span></div>
-                    </div>
+        <!-- RACK ROW 1: AI & PITCH -->
+        <div class="rack-row" id="row-pitch">
+            <div class="module-label">AUTOTUNE PRO</div>
+            <div class="controls">
+                <div class="knob-group">
+                    <label>RETUNE SPEED</label>
+                    <div class="knob medium" id="knob-speed"><div class="indicator"></div></div>
                 </div>
-            </section>
-
-            <!-- SLOT 2: DYNAMICS -->
-            <section class="slot" id="slot-dyn">
-                <div class="slot-label">STAGE 2: DYNAMIC SURGERY</div>
-                <div class="controls-grid">
-                    <div class="control-group">
-                        <label>FET THRESH</label>
-                        <div class="knob" id="knob-fet"><div class="indicator"></div></div>
-                    </div>
-                    <div class="control-group">
-                        <label>OPTO RED.</label>
-                        <div class="knob" id="knob-opto"><div class="indicator"></div></div>
-                    </div>
+                <div class="selector-group">
+                    <select id="sel-key"><option>C</option><option>C#</option><option>D</option></select>
+                    <select id="sel-scale"><option>Major</option><option>Minor</option></select>
                 </div>
-            </section>
-
-            <!-- SLOT 3: TONAL & FX -->
-            <section class="slot" id="slot-fx">
-                <div class="slot-label">STAGE 3: TEXTURE & SPACE</div>
-                <div class="controls-grid">
-                     <div class="control-group">
-                        <label>AIR SPARKLE</label>
-                        <div class="knob" id="knob-air"><div class="indicator"></div></div>
-                    </div>
-                    <div class="control-group">
-                        <label>REVERB</label>
-                        <div class="knob" id="knob-reverb"><div class="indicator"></div></div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            <div class="vu-meters">
-                <div class="vu-meter"><label>INPUT</label><div class="vu-glass"><div class="needle" id="needle-in"></div></div></div>
-                <div class="vu-meter"><label>G. REDUCTION</label><div class="vu-glass"><div class="needle" id="needle-gr"></div></div></div>
-                <div class="vu-meter"><label>OUTPUT</label><div class="vu-glass"><div class="needle" id="needle-out"></div></div></div>
+                <div class="led-display" id="display-note">C#</div>
             </div>
-            <button class="btn-ai" id="btn-activate">ACTIVATE CORE AI</button>
+        </div>
+
+        <!-- RACK ROW 2: DYNAMICS (1176 / LA-2A) -->
+        <div class="rack-row dual" id="row-dynamics">
+            <div class="sub-module" id="mod-1176">
+                <div class="module-label">1176 FET COMPRESSOR</div>
+                <div class="controls">
+                    <div class="knob-group">
+                        <label>INPUT</label>
+                        <div class="knob" id="knob-fet-in"><div class="indicator"></div></div>
+                    </div>
+                    <div class="ratio-buttons">
+                        <button class="active">4</button><button>8</button><button>12</button><button>20</button>
+                    </div>
+                    <div class="knob-group">
+                        <label>OUTPUT</label>
+                        <div class="knob" id="knob-fet-out"><div class="indicator"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sub-module" id="mod-la2a">
+                <div class="module-label">LA-2A OPTO LEVELLER</div>
+                <div class="controls">
+                    <div class="knob-group">
+                        <label>PEAK RED.</label>
+                        <div class="knob" id="knob-opto-red"><div class="indicator"></div></div>
+                    </div>
+                    <div class="knob-group">
+                        <label>GAIN</label>
+                        <div class="knob" id="knob-opto-gain"><div class="indicator"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RACK ROW 3: TONAL & TEXTURE -->
+        <div class="rack-row" id="row-tonal">
+             <div class="module-label">TONAL SURGERY & COLOR</div>
+             <div class="controls">
+                <div class="knob-group"><label>BASS</label><div class="knob mini"><div class="indicator"></div></div></div>
+                <div class="knob-group"><label>MID</label><div class="knob mini"><div class="indicator"></div></div></div>
+                <div class="knob-group"><label>AIR</label><div class="knob mini"><div class="indicator"></div></div></div>
+                <div class="v-divider"></div>
+                <div class="knob-group"><label>DE-ESSER</label><div class="knob"><div class="indicator"></div></div></div>
+                <div class="knob-group"><label>SSL DRIVE</label><div class="knob"><div class="indicator"></div></div></div>
+             </div>
+        </div>
+
+        <!-- ANALYZER & MASTER -->
+        <footer class="paz-footer">
+            <div class="paz-analyzer">
+                <canvas id="paz-spectrum"></canvas>
+            </div>
+            <div class="paz-stereo">
+                <canvas id="paz-goniometer"></canvas>
+            </div>
+            <div class="master-output">
+                <div class="vu-meter"><div class="needle" id="needle-master"></div></div>
+                <div class="knob" id="knob-limiter"><div class="indicator"></div></div>
+                <label>LIMITER</label>
+            </div>
         </footer>
     </div>
     <script src="script.js"></script>

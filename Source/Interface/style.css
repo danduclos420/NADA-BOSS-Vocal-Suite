@@ -1,175 +1,139 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-
 :root {
-    --bg-charcoal: #0a0a0a;
-    --metal-gradient: linear-gradient(180deg, #222 0%, #0d0d0d 100%);
-    --neon-red: #ff0000;
-    --red-glow: 0 0 10px rgba(255, 0, 0, 0.6);
+    --bg-charcoal: #0f0f0f;
+    --rack-metal: #1a1a1a;
+    --neon-red: #ff3c3c;
+    --red-glow: 0 0 12px rgba(255, 60, 60, 0.5);
+    --display-red: #ff0000;
 }
 
 body {
     background-color: var(--bg-charcoal);
-    color: #fff;
+    color: #e0e0e0;
     font-family: 'Inter', sans-serif;
     margin: 0;
     width: 1000px;
-    height: 650px;
+    height: 750px;
     overflow: hidden;
     user-select: none;
 }
 
-.rack-chassis {
+.master-desk {
     width: 100%;
     height: 100%;
-    background-image: var(--metal-gradient);
-    border: 3px solid #1a1a1a;
-    box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
-    position: relative;
+    background: radial-gradient(circle at 50% 50%, #222 0%, #0a0a0a 100%);
     display: flex;
     flex-direction: column;
+    border: 5px solid #222;
 }
 
-header {
-    height: 120px;
+.top-bar {
+    height: 80px;
+    background: #000;
     display: flex;
     justify-content: space-between;
-    padding: 20px 40px;
-    border-bottom: 4px solid #000;
+    align-items: center;
+    padding: 0 30px;
+    border-bottom: 2px solid #333;
 }
 
 .logo {
     color: var(--neon-red);
+    font-size: 32px;
     font-weight: 900;
-    font-size: 42px;
     margin: 0;
     text-shadow: var(--red-glow);
-    letter-spacing: -2px;
 }
 
-.subtitle {
-    color: rgba(255,255,255,0.4);
-    font-size: 12px;
-    letter-spacing: 2px;
-    margin-top: -5px;
-}
-
-.analyzer-screen {
-    width: 400px;
-    height: 80px;
-    background: #000;
-    border: 2px solid var(--neon-red);
+.rack-row {
+    margin: 10px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid #333;
     border-radius: 4px;
-    box-shadow: inset 0 0 20px rgba(255,0,0,0.2);
-}
-
-.rack-slots {
-    flex: 1;
-    display: flex;
-    padding: 20px;
-    gap: 15px;
-}
-
-.slot {
-    flex: 1;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
-    border: 1px solid rgba(255,0,0,0.1);
+    padding: 15px;
     position: relative;
-    padding: 20px;
 }
 
-.slot-label {
+.module-label {
     position: absolute;
-    top: -10px;
-    left: 20px;
-    background: #0a0a0a;
-    padding: 0 10px;
+    top: -8px;
+    left: 15px;
+    background: #0f0f0f;
+    padding: 0 8px;
     font-size: 10px;
-    color: var(--neon-red);
+    color: #555;
     font-weight: bold;
 }
 
-/* KNOBS */
+/* KNOBS MASTERCLASS */
 .knob {
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, #333 0%, #111 70%);
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #2a2a2a 0%, #0a0a0a 75%);
     border-radius: 50%;
-    margin: 20px auto;
     position: relative;
-    box-shadow: 8px 8px 20px rgba(0,0,0,0.8), -2px -2px 5px rgba(255,255,255,0.05);
-    cursor: pointer;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.9), inset 1px 1px 2px rgba(255,255,255,0.05);
 }
 
-.knob.large {
-    width: 140px;
-    height: 140px;
-}
+.knob.medium { width: 90px; height: 90px; }
+.knob.mini { width: 40px; height: 40px; }
 
 .knob .indicator {
-    width: 4px;
+    width: 3px;
     height: 40%;
     background: var(--neon-red);
     position: absolute;
-    top: 10%;
-    left: calc(50% - 2px);
-    border-radius: 2px;
+    top: 5px;
+    left: calc(50% - 1.5px);
     box-shadow: var(--red-glow);
-    transform-origin: 50% 100%;
+    transform-origin: 50% 115%;
 }
 
-.control-group label {
-    display: block;
-    text-align: center;
-    font-size: 10px;
-    color: rgba(255,255,255,0.5);
+/* DISPLAYS */
+.led-display {
+    background: #050000;
+    color: var(--display-red);
+    font-family: 'Courier New', monospace;
     font-weight: bold;
+    font-size: 24px;
+    padding: 5px 15px;
+    border-radius: 3px;
+    border: 1px solid #300;
+    text-shadow: 0 0 10px rgba(255,0,0,0.8);
 }
 
-/* FOOTER & METERS */
-footer {
-    height: 150px;
+/* PAZ ANALYZER */
+.paz-footer {
+    height: 180px;
     background: #050505;
     display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 40px;
-    border-top: 2px solid #222;
+    gap: 10px;
+    padding: 10px;
+    border-top: 3px solid #111;
 }
 
-.vu-meter {
-    text-align: center;
-    width: 180px;
-}
-
-.vu-glass {
-    height: 80px;
+.paz-analyzer, .paz-stereo {
+    flex: 2;
     background: #000;
+    border: 1px solid #222;
     border-radius: 4px;
-    border: 1px solid rgba(255,0,0,0.3);
-    margin-top: 5px;
     position: relative;
-    overflow: hidden;
 }
 
-.needle {
-    width: 2px;
-    height: 100%;
-    background: var(--neon-red);
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform-origin: 50% 100%;
-    transition: transform 0.1s ease-out;
+.paz-stereo { flex: 1; }
+
+canvas { width: 100%; height: 100%; }
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    justify-content: center;
 }
 
-.btn-ai {
-    background: var(--neon-red);
-    color: #fff;
-    border: none;
-    padding: 15px 30px;
-    font-weight: 900;
-    border-radius: 4px;
-    cursor: pointer;
-    box-shadow: var(--red-glow);
+.knob-group label {
+    display: block;
+    text-align: center;
+    font-size: 9px;
+    color: #444;
+    margin-bottom: 5px;
 }

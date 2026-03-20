@@ -1,73 +1,77 @@
 /**
- * NADA BOSS V3 - Web Connector
+ * NADA BOSS V3 MASTER DESK COMMAND
  */
 
 const knobs = document.querySelectorAll('.knob');
-const needles = {
-    in: document.getElementById('needle-in'),
-    gr: document.getElementById('needle-gr'),
-    out: document.getElementById('needle-out')
-};
+const canvasSpec = document.getElementById('paz-spectrum');
+const ctxSpec = canvasSpec.getContext('2d');
 
-// Handle Knob Rotation (Visual Only for now)
+const canvasStereo = document.getElementById('paz-goniometer');
+const ctxStereo = canvasStereo.getContext('2d');
+
+// --- 1. KNOB INTERACTION (High Resolution) ---
 knobs.forEach(knob => {
     let rotation = 0;
     knob.addEventListener('mousedown', (e) => {
         const startY = e.clientY;
+        const currentId = knob.id.replace('knob-', '').toUpperCase();
+        
         const onMouseMove = (moveE) => {
             const dy = startY - moveE.clientY;
             rotation = Math.min(150, Math.max(-150, rotation + dy));
             knob.querySelector('.indicator').style.transform = `rotate(${rotation}deg)`;
+            
+            // Normalize for JUCE (0.0 to 1.0)
+            const normValue = (rotation + 150) / 300;
+            if (window.juce) window.juce.setParam(currentId, normValue);
         };
+        
         const onMouseUp = () => {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
+        
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     });
 });
 
-const canvas = document.getElementById('canvas-analyzer');
-const ctx = canvas.getContext('2d');
-
+// --- 2. PAZ REAL-TIME RENDERER ---
 function updateSpectrum(fftData) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.beginPath();
-    ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 2;
+    ctxSpec.clearRect(0, 0, canvasSpec.width, canvasSpec.height);
     
-    const sliceWidth = canvas.width / fftData.length;
+    // Grid lines
+    ctxSpec.strokeStyle = '#111';
+    for(let i=0; i<canvasSpec.width; i+=40) {
+        ctxSpec.beginPath(); ctxSpec.moveTo(i, 0); ctxSpec.lineTo(i, canvasSpec.height); ctxSpec.stroke();
+    }
+
+    ctxSpec.beginPath();
+    ctxSpec.strokeStyle = '#ff3c3c';
+    ctxSpec.lineWidth = 1.5;
+    
+    const sliceWidth = canvasSpec.width / fftData.length;
     let x = 0;
 
     for(let i = 0; i < fftData.length; i++) {
-        const v = fftData[i] * canvas.height;
-        const y = canvas.height - v;
-
-        if(i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-
+        const y = canvasSpec.height - (fftData[i] * canvasSpec.height);
+        if(i === 0) ctxSpec.moveTo(x, y);
+        else ctxSpec.lineTo(x, y);
         x += sliceWidth;
     }
-    ctx.stroke();
+    ctxSpec.stroke();
     
-    // Add red glow area beneath
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
-    ctx.fill();
+    // Fill glow
+    ctxSpec.lineTo(canvasSpec.width, canvasSpec.height);
+    ctxSpec.lineTo(0, canvasSpec.height);
+    ctxSpec.fillStyle = 'rgba(255, 60, 60, 0.05)';
+    ctxSpec.fill();
 }
 
 function updateMeters(input, gr, output) {
-    needles.in.style.transform = `rotate(${(input - 0.5) * 90}deg)`;
-    needles.gr.style.transform = `rotate(${(gr - 0.5) * 90}deg)`;
-    needles.out.style.transform = `rotate(${(output - 0.5) * 90}deg)`;
+    // Top-tier needle physics handled in CSS transitions
+    document.getElementById('needle-master').style.transform = `rotate(${(output - 0.5) * 80}deg)`;
 }
 
-// Notify C++ of parameter changes
-function setParameter(id, value) {
-    // This will be called via the JUCE Native Bridge
-    if (window.juce) {
-        window.juce.setParam(id, value);
-    }
-}
+window.updateSpectrum = updateSpectrum;
+window.updateMeters = updateMeters;

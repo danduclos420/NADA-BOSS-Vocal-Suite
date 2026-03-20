@@ -95,11 +95,23 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
         });
 
     webView = std::make_unique<juce::WebBrowserComponent>(options);
+    
+    // --- 2. NATIVE BRIDGE (JS -> C++) ---
+    webView->addNativeAlias ("juce", [this] (const juce::var& method, const juce::Array<juce::var>& args) {
+        if (method == "setParam" && args.size() >= 2) {
+            juce::String paramID = args[0].toString();
+            float value = (float)args[1];
+            if (auto* param = audioProcessor.apvts.getParameter(paramID))
+                param->setValueNotifyingHost(value);
+        }
+        return juce::var();
+    });
+
     addAndMakeVisible (*webView);
     webView->goToURL ("http://localhost/");
 
     startTimerHz(30);
-    setSize (1000, 650);
+    setSize (1000, 750);
 }
 
 NADAAudioProcessorEditor::~NADAAudioProcessorEditor()

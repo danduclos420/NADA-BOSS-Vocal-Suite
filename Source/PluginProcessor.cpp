@@ -169,24 +169,39 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    // 1-4: AUTOTUNE
+    // --- 1. AUTOTUNE ---
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_SPEED", "Retune Speed", 0.0f, 1.0f, 0.2f));
     params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_KEY", "Key", juce::StringArray({"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}), 0));
     params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_SCALE", "Scale", juce::StringArray({"Major", "Minor"}), 0));
 
-    // 5-8: DYNAMICS
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_THRESH", "1176 Threshold", -60.0f, 0.0f, -20.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_RED", "LA-2A Reduction", -60.0f, 0.0f, -10.0f));
-    
-    // 9-12: TONAL
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("AIR", "EQP-A Air", 0.0f, 12.0f, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("SSL_DRIVE", "SSL Console Sat", 0.0f, 1.0f, 0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DEESSER_RANGE", "De-Esser Range", 0.0f, 20.0f, 6.0f));
+    // --- 2. 1176 FET ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_THRESH", "FET Threshold", -60.0f, 0.0f, -20.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_ATTACK", "FET Attack", 0.00002f, 0.001f, 0.0001f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_RELEASE", "FET Release", 0.05f, 1.1f, 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("FET_RATIO", "FET Ratio", juce::StringArray({"4:1", "8:1", "12:1", "20:1", "All-In"}), 0));
 
-    // 13-16: SPATIAL & BUS
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("STEREO_WIDTH", "Stereo Enhancer", -1.0f, 1.0f, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_WET", "Bus Reverb Mix", 0.0f, 1.0f, 0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_WET", "Bus Delay Mix", 0.0f, 1.0f, 0.1f));
+    // --- 3. LA-2A OPTO ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_RED", "OPTO Reduction", -60.0f, 0.0f, -10.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_GAIN", "OPTO Gain", 0.0f, 40.0f, 0.0f));
+
+    // --- 4. EQP-A ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("AIR", "High Sparkle", 0.0f, 12.0f, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("BASS_BOOST", "Low Warmth", 0.0f, 12.0f, 0.0f));
+
+    // --- 5. SSL & SAT ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("SSL_DRIVE", "Console Drive", 0.0f, 1.0f, 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("SAT_GRAIN", "Saturation", 0.0f, 1.0f, 0.0f));
+
+    // --- 6. DE-ESSER ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DEESSER_RANGE", "De-Esser", 0.0f, 20.0f, 6.0f));
+
+    // --- 7. SPATIAL & BUS ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("STEREO_WIDTH", "Width", 0.0f, 2.0f, 1.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_WET", "Reverb", 0.0f, 1.0f, 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_WET", "Delay", 0.0f, 1.0f, 0.1f));
+
+    // --- 8. FINAL LIMITER ---
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Target Threshold", -24.0f, 0.0f, -0.1f));
 
     return { params.begin(), params.end() };
 }
