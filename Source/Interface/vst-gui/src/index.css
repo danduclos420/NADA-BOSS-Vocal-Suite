@@ -90,30 +90,73 @@ body {
 .screw.bl { bottom: 8px; left: 8px; }
 .screw.br { bottom: 8px; right: 8px; }
 
-/* KNOB COMPONENT - ANISOTROPIC */
+/* KNOB COMPONENT - ANISOTROPIC + RED RING */
+.knob-container {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative;
+}
+
+.knob-ring-svg {
+  position: absolute; top: 0; left: 0; pointer-events: none;
+}
+
 .knob-outer {
   width: 70px; height: 70px;
   background: 
-    conic-gradient(from 0deg, #111, #444 15deg, #111 30deg, #444 45deg, #111 60deg, #444 75deg, #111 90deg, #444 105deg, #111 120deg, #444 135deg, #111 150deg, #444 165deg, #111 180deg, #444 195deg, #111 210deg, #444 225deg, #111 240deg, #444 255deg, #111 270deg, #444 285deg, #111 300deg, #444 315deg, #111 330deg, #444 345deg, #111),
-    radial-gradient(circle at center, #333, #000);
+    conic-gradient(from 180deg, #111, #444 45deg, #111 90deg, #444 135deg, #111 180deg, #444 225deg, #111 270deg, #444 315deg, #111),
+    radial-gradient(circle at center, #222, #000);
   border-radius: 50%;
-  border: 4px solid #000;
+  border: 3px solid #000;
   position: relative;
-  box-shadow: 0 10px 20px #000, 0 0 0 1px #222;
-}
-
-.knob-inner-cap {
-  position: absolute; width: 30%; height: 30%; background: #000; border-radius: 50%; box-shadow: 0 0 5px rgba(255,255,255,0.1);
+  box-shadow: 
+    0 10px 20px rgba(0,0,0,0.8),
+    0 0 0 1px #2a2c32;
+  cursor: ns-resize;
+  display: flex; justify-content: center; align-items: center;
 }
 
 .knob-outer.big { width: 100px; height: 100px; }
-.knob-outer.small { width: 40px; height: 40px; border-width: 2px; }
+.knob-outer.small { width: 42px; height: 42px; border-width: 2px; }
 
-/* LED METER */
-.meter-v {
-  width: 12px; height: 100px;
-  background: #000; border: 1px solid #222;
-  display: flex; flex-direction: column-reverse; gap: 2px; padding: 2px;
+.knob-indicator {
+  position: absolute; width: 2px; height: 15px; background: #fff;
+  top: 10%; left: 50%; transform: translateX(-50%); border-radius: 1px;
 }
-.led { width: 100%; height: 4px; background: #200; border-radius: 1px; }
+.knob-outer.small .knob-indicator { height: 8px; }
+
+/* THE AI GEM / BUTTON */
+.ai-master-btn {
+  width: 120px; height: 120px;
+  background: radial-gradient(circle at 40% 40%, #2a2c32, #000);
+  border-radius: 50%;
+  border: 6px solid #111;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), 0 20px 40px #000;
+  position: relative; cursor: pointer;
+  transition: transform 0.2s;
+}
+.ai-master-btn:hover { transform: scale(1.05); }
+.ai-master-btn::after {
+  content: ""; position: absolute; width: 100%; height: 100%;
+  border-radius: 50%; border: 2px solid var(--gold);
+  box-shadow: 0 0 20px var(--gold); opacity: 0.6;
+}
+
+.ai-text { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--gold); line-height: 0.8; text-shadow: 0 0 10px var(--gold); }
+.ai-sub { font-size: 10px; font-weight: 900; color: #555; letter-spacing: 2px; }
+
+/* DUAL METERS */
+.meter-v-dual {
+  display: flex; gap: 4px; padding: 4px; background: #000; border: 1px solid #222; border-radius: 2px;
+}
+.meter-v {
+  width: 8px; height: 80px; display: flex; flex-direction: column-reverse; gap: 1px;
+}
+.led { width: 100%; height: 3px; background: #1a1b1e; }
 .led.on { background: var(--neon-red); box-shadow: var(--neon-glow); }
+.led.on.warn { background: #ffd700; box-shadow: 0 0 5px #ffd700; }
+
+/* HARDWARE LABELS */
+.label-plugin {
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #ccc; letter-spacing: 1px;
+}
