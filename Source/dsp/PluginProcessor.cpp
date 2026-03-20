@@ -33,14 +33,6 @@ void NADAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     
     analysisBuffer.assign(fft.getSize(), 0.0f);
     analysisBufferPos = 0;
-
-    // Reset all internal states
-    for (int i=0; i<6; ++i) eq6.bands[i].reset();
-    pultec.low.reset(); pultec.high.reset();
-    for (int i=0; i<4; ++i) ssl.bands[i].reset();
-    limiter.reset();
-    reverb.reset();
-    delay.lineL.reset(); delay.lineR.reset();
 }
 
 void NADAAudioProcessor::releaseResources() {}
@@ -54,13 +46,6 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    // --- GLOBAL BYPASS ---
-    if (getActiveEditor() == nullptr || apvts.getRawParameterValue("BYPASS") != nullptr) {
-        if (auto* p = apvts.getRawParameterValue("BYPASS")) {
-            if (p->load() > 0.5f) return;
-        }
-    }
 
     // --- 1. CAPTURE DATA FOR AI ---
     auto* inL = buffer.getReadPointer(0);
@@ -111,8 +96,8 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         r = optoLA2A.process(r, optoRed);
 
         // 7. HG-2
-        l = hg2.process(l, satDrv, 0.12f, 0.08f);
-        r = hg2.process(r, satDrv, 0.12f, 0.08f);
+        l = hg2.process(l, satDrv, 0.1f, 0.1f);
+        r = hg2.process(r, satDrv, 0.1f, 0.1f);
 
         // 8. R-Vox
         l = rvox.process(l, rvoxComp, 0.001f);
@@ -141,23 +126,11 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     reverb.process(context);
 
     // 13. Delay
-    float dMix = apvts.getRawParameterValue("DELAY_MIX")->load();
+    // Simplified sample-wise delay loop for H-Delay
     for (int s = 0; s < buffer.getNumSamples(); ++s) {
         float delL = delay.lineL.popSample(0);
-        float delR = delay.lineR.popSample(0);
-        
-        delay.lineL.pushSample(0, left[s] + delL * 0.25f);
-        delay.lineR.pushSample(0, right[s] + delR * 0.25f);
-        
-        left[s] = left[s] * (1.0f - dMix*0.5f) + delL * dMix;
-        right[s] = right[s] * (1.0f - dMix*0.5f) + delR * dMix;
-    }
-
-    // 14. Master Gain & Output Clip
-    float mGain = juce::Decibels::decibelsToGain(apvts.getRawParameterValue("LIMITER_THRESH")->load());
-    for (int s = 0; s < buffer.getNumSamples(); ++s) {
-        left[s] = std::clamp(left[s] * mGain, -1.0f, 1.0f);
-        right[s] = std::clamp(right[s] * mGain, -1.0f, 1.0f);
+        delay.lineL.pushSample(0, left[s] + delL * 0.3f);
+        left[s] = left[s] * 0.8f + delL * 0.2f;
     }
 
     outputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
@@ -180,13 +153,12 @@ void NADAAudioProcessor::updateDSPChain()
         float q = apvts.getRawParameterValue(prefix + "Q")->load();
         int type = (int)apvts.getRawParameterValue(prefix + "TYPE")->load();
         
-        // Only update if parameters actually changed (optimization)
-        auto newCoeffs = (type == 0) ? juce::dsp::IIR::Coefficients<float>::makeHighPass(mSampleRate, f, q) :
-                        (type == 1) ? juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g)) :
-                                      juce::dsp::IIR::Coefficients<float>::makeLowPass(mSampleRate, f, q);
-        
-        if (newCoeffs != nullptr)
-            *eq6.bands[i].coefficients = *newCoeffs;
+        if (type == 0) // Low Cut
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighPass(mSampleRate, f, q);
+        else if (type == 1) // Bell
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g));
+        else // High Cut
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(mSampleRate, f, q);
     }
 
     // 3. 1176 Coefficients
@@ -229,32 +201,26 @@ void NADAAudioProcessor::runSpectralAnalysis()
     // ... logic to fill spectrum ...
 
     // AI HEURISTICS (Sound Matching)
-    // Only run if we have significant input to avoid noise-floor tracking
-    if (inputLevel.load() < 0.01f) return;
-
     // Targeting "US VOCAL" Profile: Bright, controlled low-mids, flat but present 2k-5k.
     
     // Example: If low energy is > target, reduce EQ Band 2 (Mud)
     if (lastAnalysis.lowEnergy > 0.5f) {
         if (auto* p = apvts.getParameter("EQ_BAND_2_GAIN"))
-            p->setValueNotifyingHost(0.35f); // Normalized value (around -6dB)
+            p->setValueNotifyingHost((float)(juce::Decibels::gainToDecibels(0.7f) / 12.0));
     }
 
     // Example: If sibilance is high, increase De-esser Range
     if (lastAnalysis.highEnergy > 0.4f) {
         if (auto* p = apvts.getParameter("DEESSER_RANGE"))
-            p->setValueNotifyingHost(0.7f);
+            p->setValueNotifyingHost(0.8f);
     }
 
-    // Normalize Output to -14 LUFS (Standard)
-    float targetLUFS = -14.0f;
+    // Normalize Output to -10 LUFS
+    float targetLUFS = -10.0f;
     float currentLUFS = (float)juce::Decibels::gainToDecibels((double)outputLevel.load());
     float makeup = targetLUFS - currentLUFS;
-    
-    // Map -24..0 range to 0..1 normalized
-    float normalizedMakeup = (makeup + 24.0f) / 24.0f; 
     if (auto* p = apvts.getParameter("LIMITER_THRESH"))
-        p->setValueNotifyingHost(std::clamp(normalizedMakeup, 0.0f, 1.0f));
+        p->setValueNotifyingHost((float)std::clamp((double)makeup / 24.0, 0.0, 1.0));
 
     analysisRequested = false;
 }
@@ -308,10 +274,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
 
     // 10. Master
     params.push_back(std::make_unique<juce::AudioParameterFloat>("STEREO_WIDTH", "Width", 0.0f, 2.0f, 1.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Master Gain", -24.0f, 0.0f, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Limiter Threshold", -24.0f, 0.0f, -0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.2f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.5f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.2f));
 
     return { params.begin(), params.end() };
 }

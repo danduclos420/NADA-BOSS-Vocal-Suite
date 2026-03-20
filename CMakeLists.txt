@@ -78,7 +78,7 @@ target_link_libraries(NADA_BOSS_VOCAL_SUITE PRIVATE
     ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib
 )
 
-# 6. Post-Build (DLL Copy ONLY)
+# 6. Post-Build (DLL Copy)
 add_custom_command(TARGET NADA_BOSS_VOCAL_SUITE POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll"
