@@ -145,19 +145,26 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    // DSP Chain
-    FETCompressor fet;
-    OPTOCompressor opto;
-    YinPitchDetector pitchDetector;
-    
-    // FX
-    juce::dsp::Reverb reverb;
-    juce::dsp::DelayLine<float> delayL;
-    juce::dsp::DelayLine<float> delayR;
+#include "NADAPitchShifter.h"
 
-    // --- DE-ESSER ---
-    juce::dsp::IIR::Filter<float> deEsserL;
-    juce::dsp::IIR::Filter<float> deEsserR;
+// ... existing code ...
+
+    // --- 14-STEP PRO DSP CHAIN ---
+    NADAPitchShifter pitchShifter;
+    juce::dsp::ProcessorChain<
+        juce::dsp::IIR::Filter<float>,    // 1. High Pass
+        juce::dsp::IIR::Filter<float>,    // 2. Subtractive EQ
+        juce::dsp::Bias<float>,           // 3. SSL Saturation (Placeholder Bias)
+        juce::dsp::Gain<float>,            // 4. Input Gain
+        juce::dsp::Compressor<float>,      // 5. FET 1176
+        juce::dsp::Compressor<float>,      // 6. OPTO LA-2A
+        juce::dsp::IIR::Filter<float>,    // 7. De-esser
+        juce::dsp::IIR::Filter<float>,    // 8. Air Shelf
+        juce::dsp::Gain<float>,            // 9. Saturation Drive
+        juce::dsp::Limiter<float>         // 10. True Peak Limiter
+    > dspChain;
+
+    void updateDSPChain();
 
     double currentSampleRate = 44100.0;
 
