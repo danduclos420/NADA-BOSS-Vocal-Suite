@@ -1,195 +1,152 @@
-#include "../dsp/PluginProcessor.h"
 #include "PluginEditor.h"
 
+// ==============================================================================
+// 1. CUSTOM LOOK AND FEEL (Genuine Machine Style - Native Restoration)
+// ==============================================================================
 NADALookAndFeel::NADALookAndFeel()
 {
-    setColour(juce::Slider::thumbColourId, juce::Colours::red);
+    setColour(juce::Slider::thumbColourId, juce::Colour(0xffd4af37)); // Gold
+    setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff1c1e21));
+    setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(0xff0b0c0f));
 }
 
-void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
-                                       float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
-                                       juce::Slider& slider)
+void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
+                                       float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
 {
-    juce::ignoreUnused(slider);
-    auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (8);
-    auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
+    auto radius = (float)juce::jmin (width / 2, height / 2) - 4.0f;
+    auto centreX = (float)x + (float)width  * 0.5f;
+    auto centreY = (float)y + (float)height * 0.5f;
+    auto rx = centreX - radius;
+    auto ry = centreY - radius;
+    auto rw = radius * 2.0f;
     auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-    
-    // --- 1. CHASSIS DEPTH --- (Ambient Occlusion)
-    g.setColour (juce::Colours::black.withAlpha (0.6f));
-    g.fillEllipse (bounds.getCentreX() - radius - 2, bounds.getCentreY() - radius + 3, radius * 2.2f, radius * 2.2f);
 
-    // --- 2. THE KNOB (Gunmetal Steel) ---
-    auto knobRadius = radius * 0.9f;
-    juce::Path knob;
-    knob.addEllipse (bounds.getCentreX() - knobRadius, bounds.getCentreY() - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f);
-    
-    juce::ColourGradient grad (juce::Colour (0xff333333), bounds.getCentreX(), bounds.getCentreY() - knobRadius,
-                               juce::Colour (0xff111111), bounds.getCentreX(), bounds.getCentreY() + knobRadius, false);
-    grad.addColour (0.5, juce::Colour (0xff222222));
-    g.setGradientFill (grad);
-    g.fillPath (knob);
-    
-    // Top Rim highlight
-    g.setColour (juce::Colours::white.withAlpha (0.05f));
-    g.drawEllipse (bounds.getCentreX() - knobRadius, bounds.getCentreY() - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f, 1.0f);
+    // Fill
+    g.setColour (juce::Colour (0xff1c1e21));
+    g.fillEllipse (rx, ry, rw, rw);
 
-    // --- 3. THE INDICATOR (Laser Red Glow) ---
+    // Outline (Rack Frame style)
+    g.setColour (juce::Colour (0xff353b42).withAlpha(0.3f));
+    g.drawEllipse (rx, ry, rw, rw, 2.0f);
+
+    // Pointer (Golden Precision)
     juce::Path p;
-    auto pointerLength = knobRadius * 0.5f;
-    auto pointerThickness = 4.0f;
-    p.addRoundedRectangle (-pointerThickness * 0.5f, -knobRadius + 2.0f, pointerThickness, pointerLength, 1.0f);
-    p.applyTransform (juce::AffineTransform::rotation (angle).translated (bounds.getCentreX(), bounds.getCentreY()));
-    
-    // Outer Glow
-    g.setColour (juce::Colours::red.withAlpha (0.3f));
-    g.strokePath (p, juce::PathStrokeType (3.0f));
-    
-    // Bright Core
-    g.setColour (juce::Colours::red.withBrightness(1.2f));
+    auto pointerLength = radius * 0.7f;
+    auto pointerThickness = 3.0f;
+    p.addRectangle (-pointerThickness * 0.5f, -radius, pointerThickness, pointerLength);
+    p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
+    g.setColour (juce::Colour (0xffd4af37));
     g.fillPath (p);
 }
 
-void NADALookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& button,
-                                           const juce::Colour& backgroundColour,
-                                           bool shouldDrawButtonAsHighlighted,
-                                           bool shouldDrawButtonAsDown)
-{
-    auto cornerSize = 6.0f;
-    auto bounds = button.getLocalBounds().toFloat().reduced (0.5f);
-
-    auto baseColour = backgroundColour.withMultipliedSaturation (shouldDrawButtonAsHighlighted ? 1.3f : 1.0f)
-                                       .withMultipliedBrightness (shouldDrawButtonAsDown ? 0.8f : 1.0f);
-
-    if (shouldDrawButtonAsDown) bounds = bounds.translated (0, 1.0f);
-
-    // Gold Button Effect for NADA AI
-    if (button.getName() == "NADA AI")
-    {
-        juce::ColourGradient gold (juce::Colour(0xffffd700), bounds.getX(), bounds.getY(),
-                                  juce::Colour(0xffb8860b), bounds.getRight(), bounds.getBottom(), false);
-        g.setGradientFill(gold);
-    }
-    else
-    {
-        g.setColour (baseColour);
-    }
-
-    g.fillRoundedRectangle (bounds, cornerSize);
-    g.setColour (button.findColour (juce::ComboBox::outlineColourId));
-    g.drawRoundedRectangle (bounds, cornerSize, 1.0f);
-}
-
-// --- EDITOR ---
-
+// ==============================================================================
+// 2. MAIN EDITOR
+// ==============================================================================
 NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     setLookAndFeel(&lnf);
 
-    // --- 1. SETUP WEB VIEW ---
-    auto options = juce::WebBrowserComponent::Options{}
-        .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
-        .withResourceProvider([this](const juce::String& url) -> std::optional<juce::WebBrowserComponent::Resource> {
-            auto resourcePath = url.fromFirstOccurrenceOf(juce::WebBrowserComponent::getResourceProviderRoot(), false, true);
+    setupControl(masterGain, "LIMITER_THRESH", "GAIN (DB)");
+    setupControl(saturation, "SAT_DRIVE", "SATURATION");
+    setupControl(compression, "1176_THR", "COMPRESSION");
+    setupControl(eqHigh, "EQ_BAND_5_GAIN", "EQ HIGH");
+    setupControl(eqLow, "EQ_BAND_1_GAIN", "EQ LOW");
+    setupControl(reverbMix, "REVERB_MIX", "REVERB");
+    setupControl(delayMix, "DELAY_MIX", "DELAY");
 
-            if (resourcePath.isEmpty() || resourcePath == "/")
-                resourcePath = "index.html";
-
-            juce::File executable = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
-            juce::File resourceFile = executable.getSiblingFile("Resources").getChildFile(resourcePath);
-
-            if (!resourceFile.existsAsFile())
-                resourceFile = executable.getParentDirectory().getSiblingFile("Resources").getChildFile(resourcePath);
-
-            if (resourceFile.existsAsFile())
-            {
-                juce::MemoryBlock mb;
-                if (resourceFile.loadFileAsData(mb))
-                {
-                    std::vector<std::byte> data(mb.getSize());
-                    std::memcpy(data.data(), mb.getData(), mb.getSize());
-                    return juce::WebBrowserComponent::Resource{ std::move(data), resourceFile.getFileExtension().replace(".", "") };
-                }
-            }
-
-            return std::nullopt;
-        })
-        .withNativeIntegrationEnabled(true)
-        .withNativeFunction ("setParam", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-            if (auto* param = audioProcessor.apvts.getParameter(args[0].toString()))
-                param->setValueNotifyingHost((float)args[1]);
-            completion (juce::var());
-        })
-        .withNativeFunction ("triggerAnalysis", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-            juce::ignoreUnused(args);
-            audioProcessor.triggerNADAAnalysis();
-            completion (juce::var());
-        });
-
-    webView = std::make_unique<juce::WebBrowserComponent>(options);
-    addAndMakeVisible (*webView);
-    
-    // Robust local resource loading
-    juce::File executable = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
-    juce::File resourceFile = executable.getSiblingFile("Resources").getChildFile("index.html");
-    
-    // Fallback for different bundle structures (e.g. some DAWs or dev builds)
-    if (!resourceFile.existsAsFile())
-        resourceFile = executable.getParentDirectory().getSiblingFile("Resources").getChildFile("index.html");
-
-    if (resourceFile.existsAsFile())
-        webView->goToURL(juce::URL(resourceFile).toString(true));
-    else
-        webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
+    statusLabel.setText("NATIVE UI // AI READY // STEREO FIXED", juce::dontSendNotification);
+    statusLabel.setJustificationType(juce::Justification::centred);
+    statusLabel.setColour(juce::Label::textColourId, juce::Colour(0xffd4af37));
+    addAndMakeVisible(statusLabel);
 
     startTimerHz(30);
-    setSize (1600, 900); 
+    setSize (1000, 600); 
 }
 
 NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
+}
+
+void NADAAudioProcessorEditor::setupControl(ControlGroup& group, const juce::String& paramID, const juce::String& labelText)
+{
+    group.slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    group.slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    addAndMakeVisible(group.slider);
+    
+    group.attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, paramID, group.slider);
+    
+    group.label.setText(labelText, juce::dontSendNotification);
+    group.label.setJustificationType(juce::Justification::centred);
+    group.label.setFont(juce::Font("Inter", 12.0f, juce::Font::bold));
+    group.label.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.6f));
+    addAndMakeVisible(group.label);
 }
 
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // --- DARK RACK BACKGROUND (Loading / Fallback) ---
+    // --- INDUSTRIAL RACK BACKGROUND ---
     g.fillAll (juce::Colour (0xff0b0c0f));
-    auto rackArea = getLocalBounds().toFloat().reduced(16);
-    g.setColour (juce::Colour (0xff1c1e21));
-    g.fillRoundedRectangle (rackArea, 8.0f);
     
-    // Branding
-    g.setColour (juce::Colours::white.withAlpha (0.05f));
-    g.setFont (juce::Font ("Inter", 24.0f, juce::Font::bold));
-    g.drawText ("NADA BOSS // LOADING...", getLocalBounds(), juce::Justification::centred);
+    auto area = getLocalBounds().toFloat().reduced(20);
+    g.setColour (juce::Colour (0xff1c1e21));
+    g.fillRoundedRectangle (area, 12.0f);
+    
+    // Grid Dividers
+    g.setColour (juce::Colours::white.withAlpha(0.05f));
+    for (int i=1; i<4; ++i)
+        g.drawVerticalLine (i * getWidth() / 4, 40, (float)getHeight() - 40);
+
+    // Header
+    g.setColour (juce::Colours::white.withAlpha(0.1f));
+    g.setFont (juce::Font ("Inter", 14.0f, juce::Font::bold));
+    g.drawText ("NADA BOSS // PROFESSIONAL MASTERING FRAME // ELITE SERIES", 
+                getLocalBounds().removeFromTop(50), juce::Justification::centred);
 }
 
 void NADAAudioProcessorEditor::resized()
 {
-    if (webView != nullptr)
-        webView->setBounds(getLocalBounds());
+    auto area = getLocalBounds().reduced(40);
+    area.removeFromTop(40); // Space for header
+    
+    auto topRow = area.removeFromTop(area.getHeight() / 2);
+    auto bottomRow = area;
+
+    auto cellW = topRow.getWidth() / 4;
+    
+    // Top Row
+    masterGain.slider.setBounds(topRow.removeFromLeft(cellW).reduced(20));
+    saturation.slider.setBounds(topRow.removeFromLeft(cellW).reduced(20));
+    compression.slider.setBounds(topRow.removeFromLeft(cellW).reduced(20));
+    eqHigh.slider.setBounds(topRow.removeFromLeft(cellW).reduced(20));
+    
+    // Labels for Top Row
+    auto labelArea = getLocalBounds().reduced(40);
+    labelArea.removeFromTop(180);
+    auto lRow = labelArea.removeFromTop(30);
+    masterGain.label.setBounds(lRow.removeFromLeft(cellW));
+    saturation.label.setBounds(lRow.removeFromLeft(cellW));
+    compression.label.setBounds(lRow.removeFromLeft(cellW));
+    eqHigh.label.setBounds(lRow.removeFromLeft(cellW));
+
+    // Bottom Row
+    eqLow.slider.setBounds(bottomRow.removeFromLeft(cellW).reduced(20));
+    reverbMix.slider.setBounds(bottomRow.removeFromLeft(cellW).reduced(20));
+    delayMix.slider.setBounds(bottomRow.removeFromLeft(cellW).reduced(20));
+    
+    // Labels for Bottom Row
+    auto blRow = labelArea.removeFromTop(180); // Move down
+    blRow = labelArea.removeFromTop(30);
+    eqLow.label.setBounds(blRow.removeFromLeft(cellW));
+    reverbMix.label.setBounds(blRow.removeFromLeft(cellW));
+    delayMix.label.setBounds(blRow.removeFromLeft(cellW));
+
+    statusLabel.setBounds(getLocalBounds().removeFromBottom(40));
 }
 
 void NADAAudioProcessorEditor::timerCallback()
 {
-    if (webView != nullptr)
-    {
-        // 1. Meters
-        auto input = audioProcessor.inputLevel.load();
-        auto gr = audioProcessor.grLevel.load();
-        auto output = audioProcessor.outputLevel.load();
-        
-        juce::String meterJs = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
-        webView->evaluateJavascript(meterJs);
-
-        // 2. Spectrum (Simplified telemetry)
-        juce::String specJs = juce::String::formatted("if(window.updateSpectrum) updateSpectrum([%f, %f, %f]);", 
-            audioProcessor.lastAnalysis.lowEnergy, 
-            audioProcessor.lastAnalysis.midEnergy, 
-            audioProcessor.lastAnalysis.highEnergy);
-        webView->evaluateJavascript(specJs);
-    }
-    
+    // Native level monitoring would go here (optional for now)
     repaint();
 }
