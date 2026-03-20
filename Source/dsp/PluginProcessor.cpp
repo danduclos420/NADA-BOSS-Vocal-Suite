@@ -52,50 +52,56 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     }
     inputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
 
-    // --- 2. UPDATE PARAMETERS ---
+    // --- 2. UPDATE PARAMETERS (Coefficient calculation) ---
     updateDSPChain();
 
-    // --- 3. THE 14-STAGE GANGSTER CHAIN ---
-    auto* left = buffer.getWritePointer(0);
-    auto* right = buffer.getWritePointer(1);
+    // --- 3. HARVEST PARAMETERS (Atomic loads once per block) ---
+    float speed = apvts.getRawParameterValue("AUTOTUNE_SPEED")->load();
+    float userPitch = apvts.getRawParameterValue("AUTOTUNE_PITCH")->load();
+    float fetThr = apvts.getRawParameterValue("FET_THRESH")->load();
+    float fetRat = apvts.getRawParameterValue("FET_RATIO")->load();
+    float optoRed = apvts.getRawParameterValue("OPTO_RED")->load();
+    float satDrv = apvts.getRawParameterValue("SAT_DRIVE")->load();
+    float rvoxComp = apvts.getRawParameterValue("RVOX_COMP")->load();
+    float dsRange = apvts.getRawParameterValue("DEESSER_RANGE")->load();
+    float stWidth = apvts.getRawParameterValue("STEREO_WIDTH")->load();
 
-    for (int i = 0; i < buffer.getNumSamples(); ++i)
-    {
-        // 1. Pitch (Crispytuner) - Sample by sample if needed, but we use pitchShifter.process for blocks
-    }
-    float pitchRatio = std::pow(2.0f, apvts.getRawParameterValue("AUTOTUNE_PITCH")->load() / 12.0f);
+    // 1. Pitch (Crispytuner)
+    float pitchRatio = std::pow(2.0f, userPitch / 12.0f);
     pitchShifter.process(buffer, pitchRatio);
 
-    // Block-based Processing for the rest
+    // Block-based Processing
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
 
-    // 2. Pro-Q 3 (6 bands)
+    // 2. Pro-Q 3
     for (int i=0; i<6; ++i) eq6.bands[i].process(context);
 
-    // 3, 4, 7, 8, 9 (Sample-wise specialized modules)
+    // --- SAMPLE-WISE POWER LOOP (Stages 3-9) ---
+    auto* left = buffer.getWritePointer(0);
+    auto* right = buffer.getWritePointer(1);
     for (int s = 0; s < buffer.getNumSamples(); ++s) {
         float l = left[s]; float r = right[s];
         
         // 3. 1176
-        l = fet1176.process(l, -20.0f, 4.0f, 0.2f, 200.0f);
-        r = fet1176.process(r, -20.0f, 4.0f, 0.2f, 200.0f);
+        l = fet1176.process(l, fetThr, fetRat);
+        r = fet1176.process(r, fetThr, fetRat);
 
         // 4. LA-2A
-        l = optoLA2A.process(l, 0.5f);
-        r = optoLA2A.process(r, 0.5f);
+        l = optoLA2A.process(l, optoRed);
+        r = optoLA2A.process(r, optoRed);
 
         // 7. HG-2
-        l = hg2.process(l, 0.2f, 0.1f, 0.1f);
-        r = hg2.process(r, 0.2f, 0.1f, 0.1f);
+        l = hg2.process(l, satDrv, 0.1f, 0.1f);
+        r = hg2.process(r, satDrv, 0.1f, 0.1f);
 
         // 8. R-Vox
-        l = rvox.process(l, -12.0f, 0.001f);
-        r = rvox.process(r, -12.0f, 0.001f);
+        l = rvox.process(l, rvoxComp, 0.001f);
+        r = rvox.process(r, rvoxComp, 0.001f);
 
         // 9. 902 De-esser
-        l = deesser.process(l, 0.5f, 6000.0f);
-        r = deesser.process(r, 0.5f, 6000.0f);
+        l = deesser.process(l, dsRange);
+        r = deesser.process(r, dsRange);
 
         left[s] = l; right[s] = r;
     }
@@ -128,22 +134,6 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 
 void NADAAudioProcessor::updateDSPChain()
 {
-    // Update all 100+ parameters here...
-    // (Reduced snippet for brevity, focusing on the core structure)
-    
-    // Pro-Q 3
-    for (int i=0; i<6; ++i) {
-        auto f = 1000.0f * (i+1);
-        *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, f, 1.0f, 1.0f);
-    }
-
-    // Limiter
-    auto& limParams = limiter;
-    limParams.setThreshold(apvts.getRawParameterValue("LIMITER_THRESH")->load());
-}
-
-void NADAAudioProcessor::updateDSPChain()
-{
     // 1. Crispytuner - Handled in processBlock directly
 
     // 2. Pro-Q 3 (6 Bands)
@@ -155,11 +145,10 @@ void NADAAudioProcessor::updateDSPChain()
         *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, f, q, juce::Decibels::decibelsToGain(g));
     }
 
-    // 3. 1176
-    float fAtk = apvts.getRawParameterValue("FET_ATTACK")->load() / 1000.0f;
-    float fRel = apvts.getRawParameterValue("FET_RELEASE")->load() / 1000.0f;
-    float fThr = apvts.getRawParameterValue("FET_THRESH")->load();
-    // Param values already updated in processBlock call
+    // 3. 1176 Coefficients
+    float fAtk = apvts.getRawParameterValue("FET_ATTACK")->load();
+    float fRel = apvts.getRawParameterValue("FET_RELEASE")->load();
+    fet1176.updateCoefficients(fAtk, fRel);
 
     // 5. Pultec
     float pLowBoost = apvts.getRawParameterValue("PULTEC_LOW_BOOST")->load();

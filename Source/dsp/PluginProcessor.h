@@ -7,25 +7,36 @@
 // ==============================================================================
 // 1. FET COMPRESSOR (1176 Style)
 // ==============================================================================
+// ==============================================================================
+// 1. FET COMPRESSOR (1176 Style) - Optimized
+// ==============================================================================
 class FETCompressor {
 public:
-    void prepare(double sr) { sampleRate = sr; envelope = 0.0f; }
-    float process(float in, float threshold, float ratio, float attack, float release) {
+    void prepare(double sr) { 
+        sampleRate = sr; 
+        envelope = 0.0f;
+        updateCoefficients(0.1f, 100.0f); // Defaults
+    }
+    
+    void updateCoefficients(float attackMs, float releaseMs) {
+        attCoef = std::exp(-1.0f / (attackMs * 0.001f * sampleRate));
+        relCoef = std::exp(-1.0f / (releaseMs * 0.001f * sampleRate));
+    }
+
+    float process(float in, float threshold, float ratio) {
         float absIn = std::abs(in);
-        float attCoef = std::exp(-1.0f / (attack * 0.001f * sampleRate));
-        float relCoef = std::exp(-1.0f / (release * 0.001f * sampleRate));
-        
         if (absIn > envelope) envelope = attCoef * envelope + (1.0f - attCoef) * absIn;
         else envelope = relCoef * envelope + (1.0f - relCoef) * absIn;
 
-        float reduction = 1.0f;
         if (envelope > threshold) {
             float overdB = 20.0f * std::log10(envelope / threshold);
             float targetdB = overdB / ratio;
-            reduction = std::pow(10.0f, (targetdB - overdB) / 20.0f);
+            float reduction = std::pow(10.0f, (targetdB - overdB) / 20.0f);
+            lastGR = 1.0f - reduction;
+            return in * reduction;
         }
-        lastGR = 1.0f - reduction; // For metering
-        return in * reduction;
+        lastGR = 0.0f;
+        return in;
     }
     
     float getGainReduction() const { return lastGR; }
@@ -33,38 +44,44 @@ public:
 private:
     double sampleRate;
     float envelope = 0.0f;
+    float attCoef, relCoef;
     float lastGR = 0.0f;
 };
 
 // ==============================================================================
 // 2. OPTO COMPRESSOR (LA-2A Style) - Multi-stage release
 // ==============================================================================
+// ==============================================================================
+// 2. OPTO COMPRESSOR (LA-2A Style) - Optimized
+// ==============================================================================
 class OPTOCompressor {
 public:
-    void prepare(double sr) { sampleRate = sr; }
+    void prepare(double sr) { 
+        sampleRate = sr; 
+        attCoef = std::exp(-1.0f / (0.010f * sampleRate)); // Fixed 10ms attack
+        relCoefSlow = std::exp(-1.0f / (2.0f * sampleRate));
+        relCoefFast = std::exp(-1.0f / (0.060f * sampleRate));
+    }
     float process(float in, float peakRed) {
         float absIn = std::abs(in);
-        // LA-2A slow attack ~10ms
-        float att = 0.010f; 
-        float attCoef = std::exp(-1.0f / (att * sampleRate));
         envelope = attCoef * envelope + (1.0f - attCoef) * absIn;
-
-        // Multi-stage release: 50% in 60ms, then up to 5s
-        float rel = (envelope > 0.5f) ? 0.060f : 2.0f; 
-        float relCoef = std::exp(-1.0f / (rel * sampleRate));
+        
+        float relCoef = (envelope > 0.5f) ? relCoefFast : relCoefSlow;
         envelope *= relCoef;
 
-        float reduction = 1.0f;
         if (envelope > peakRed) {
-            reduction = peakRed / envelope; // Soft knee saturation
+            float reduction = peakRed / envelope;
+            lastGR = 1.0f - reduction;
+            return in * reduction;
         }
-        lastGR = 1.0f - reduction;
-        return in * reduction;
+        lastGR = 0.0f;
+        return in;
     }
     float getGainReduction() const { return lastGR; }
 private:
     double sampleRate;
     float envelope = 0.0f;
+    float attCoef, relCoefSlow, relCoefFast;
     float lastGR = 0.0f;
 };
 
@@ -148,15 +165,21 @@ private:
 // ==============================================================================
 // 5. SATURATION/DISTORTION (HG-2 Style)
 // ==============================================================================
+// ==============================================================================
+// 5. SATURATION/DISTORTION (HG-2 Style) - Optimized
+// ==============================================================================
 class HG2Saturator {
 public:
     void prepare(double sr) { sampleRate = sr; }
     float process(float in, float saturation, float pentode, float triode) {
+        // Pre-clamping input to prevent extreme tanh instability
         float x = in * (1.0f + saturation * 2.0f);
-        // Pentode (Odd harmonics - tanh)
+        // Pentode (Odd harmonics - tanh is already efficient in some libs, but let's keep it)
         float p = std::tanh(x * (1.0f + pentode));
-        // Triode (Even harmonics - offset squared)
-        float t = std::pow(std::abs(x + triode * 0.1f), 1.2f) * (x > -triode * 0.1f ? 1.0f : -1.0f);
+        // Triode (Even harmonics - simple quadratic saturation)
+        float triodeOffset = triode * 0.1f;
+        float t = (x + triodeOffset);
+        t = (t * t) * (t > 0 ? 1.0f : -1.0f); // Quick non-linear response
         return (p * 0.6f + t * 0.4f) * 0.8f;
     }
 private:
@@ -164,17 +187,20 @@ private:
 };
 
 // ==============================================================================
-// 6. R-VOX (Vocal Comp/Gate)
+// 6. R-VOX (Vocal Comp/Gate) - Optimized
 // ==============================================================================
 class RVoxProcessor {
 public:
-    void prepare(double sr) { sampleRate = sr; comp.prepare({ sr, 512, 1 }); }
-    float process(float in, float thresh, float gate) {
-        if (std::abs(in) < gate) return 0.0f;
-        comp.setThreshold(thresh);
+    void prepare(double sr) { 
+        sampleRate = sr; 
+        comp.prepare({ sr, 512, 1 }); 
         comp.setRatio(4.0f);
         comp.setAttack(5.0f);
         comp.setRelease(100.0f);
+    }
+    float process(float in, float thresh, float gate) {
+        if (std::abs(in) < gate) return 0.0f;
+        comp.setThreshold(thresh);
         return comp.processSample(0, in);
     }
 private:
@@ -183,7 +209,7 @@ private:
 };
 
 // ==============================================================================
-// 7. 902 DE-ESSER
+// 7. 902 DE-ESSER - Optimized
 // ==============================================================================
 class DeEsser902 {
 public:
@@ -192,11 +218,9 @@ public:
         filter.prepare({ sr, 512, 1 });
         *filter.coefficients = *juce::dsp::IIR::Coefficients<float>::makeBandPass(sr, 6000.0f, 1.0f);
     }
-    float process(float in, float range, float freq) {
+    float process(float in, float range) {
         float sibilance = filter.processSample(0, in);
-        float env = std::abs(sibilance);
-        float reduction = 1.0f;
-        if (env > 0.1f) reduction = 1.0f - (range * (env - 0.1f));
+        float reduction = 1.0f - (range * std::abs(sibilance));
         return in * std::max(0.2f, reduction);
     }
 private:

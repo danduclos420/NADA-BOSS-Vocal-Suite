@@ -1,0 +1,30 @@
+# JUCE
+Builds/
+JuceLibraryCode/
+*.jucer
+
+# React / Node
+node_modules/
+dist/
+.env
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# C++ Build Artifacts
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.o
+*.a
+
+# NADA Specific Cache
+*.log
+analysis_cache/
