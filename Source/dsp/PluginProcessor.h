@@ -181,6 +181,7 @@ class StereoMaker {
 public:
     void prepare(double sr) { sampleRate = sr; }
     void process(juce::AudioBuffer<float>& buffer, float width, float monoMakerFreq) {
+        juce::ignoreUnused(monoMakerFreq); // Added
         auto* l = buffer.getWritePointer(0);
         auto* r = buffer.getWritePointer(1);
         for (int i=0; i<buffer.getNumSamples(); ++i) {
@@ -227,9 +228,9 @@ public:
 
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
-    void setCurrentProgram (int index) override {}
-    const juce::String getProgramName (int index) override { return {}; }
-    void changeProgramName (int index, const juce::String& newName) override {}
+    void setCurrentProgram (int index) override { juce::ignoreUnused(index); }
+    const juce::String getProgramName (int index) override { juce::ignoreUnused(index); return {}; }
+    void changeProgramName (int index, const juce::String& newName) override { juce::ignoreUnused(index, newName); }
 
     void triggerNADAAnalysis();
     

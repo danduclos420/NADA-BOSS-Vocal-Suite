@@ -87,37 +87,41 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     // --- 1. SETUP WEB VIEW ---
     auto options = juce::WebBrowserComponent::Options{}
         .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
-        .withResourceProvider ([this](const juce::String& url) {
-            auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
-            
-            // 1. Try relative to the plugin binary (Bundle mode)
-            auto binaryFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
-            auto file = binaryFile.getChildFile("../../../Source/Interface").getChildFile(fileName);
-            
-            // 2. Fallback to Working Directory (Development mode)
-            if (!file.existsAsFile())
-                file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
-                
-            if (file.existsAsFile()) {
+        .withResourceProvider([this](const juce::String& url) -> std::optional<juce::WebBrowserComponent::Resource> {
+            auto resourcePath = url.fromFirstOccurrenceOf(juce::WebBrowserComponent::getResourceProviderRoot(), false, true);
+
+            if (resourcePath.isEmpty() || resourcePath == "/")
+                resourcePath = "index.html";
+
+            juce::File executable = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
+            juce::File resourceFile = executable.getSiblingFile("Resources").getChildFile(resourcePath);
+
+            if (!resourceFile.existsAsFile())
+                resourceFile = executable.getParentDirectory().getSiblingFile("Resources").getChildFile(resourcePath);
+
+            if (resourceFile.existsAsFile())
+            {
                 juce::MemoryBlock mb;
-                if (file.loadFileAsData(mb)) {
-                    return std::make_optional(juce::WebBrowserComponent::Resource { 
-                        std::vector<std::byte>((const std::byte*)mb.getData(), (const std::byte*)mb.getData() + mb.getSize()),
-                        file.getFileExtension().replace(".", "") 
-                    });
+                if (resourceFile.loadFileAsData(mb))
+                {
+                    std::vector<std::byte> data(mb.getSize());
+                    std::memcpy(data.data(), mb.getData(), mb.getSize());
+                    return juce::WebBrowserComponent::Resource{ std::move(data), resourceFile.getFileExtension().replace(".", "") };
                 }
             }
-            return std::optional<juce::WebBrowserComponent::Resource>{};
+
+            return std::nullopt;
         })
         .withNativeIntegrationEnabled(true)
         .withNativeFunction ("setParam", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-            if (args.size() >= 2) {
-                juce::String paramID = args[0].toString();
-                float value = (float)args[1];
-                if (auto* param = audioProcessor.apvts.getParameter(paramID))
-                    param->setValueNotifyingHost(value);
-            }
-            completion(juce::var());
+            if (auto* param = audioProcessor.apvts.getParameter(args[0].toString()))
+                param->setValueNotifyingHost((float)args[1]);
+            completion (std::nullopt);
+        })
+        .withNativeFunction ("triggerAnalysis", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+            juce::ignoreUnused(args);
+            audioProcessor.triggerNADAAnalysis();
+            completion (std::nullopt);
         });
 
     webView = std::make_unique<juce::WebBrowserComponent>(options);
@@ -135,11 +139,13 @@ NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
 
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    JUCE_UNUSED(g); // Added JUCE_UNUSED
 }
 
 void NADAAudioProcessorEditor::resized()
 {
-    webView->setBounds (getLocalBounds());
+    if (webView != nullptr)
+        webView->setBounds(getLocalBounds());
 }
 
 void NADAAudioProcessorEditor::timerCallback()
