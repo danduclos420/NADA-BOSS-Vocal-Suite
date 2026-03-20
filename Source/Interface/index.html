@@ -14,7 +14,7 @@
             <div class="header-left">
                 <h1>NADA AUDIO</h1>
                 <h2>PRO-VOCALIST SUITE</h2>
-                <span class="sub-font">BEBAS NEUE BOLD</span>
+                <div class="screw top-left"></div>
             </div>
             
             <div class="ai-master-housing">
@@ -28,7 +28,7 @@
             <div class="header-right">
                 <div class="vst-badge">VST3</div>
                 <h2>4K RESOLUTION</h2>
-                <span class="sub-font">BEBAS NEUE BOLD</span>
+                <div class="screw top-right"></div>
             </div>
         </header>
 
@@ -37,25 +37,24 @@
             
             <!-- SECTION: AUTOTUNE -->
             <section class="module-box autotune">
+                <div class="screw top-left small"></div><div class="screw top-right small"></div>
                 <div class="module-title">AUTOTUNE</div>
                 <div class="module-content">
                     <div class="meter-group">
-                        <label>SIGNAL</label>
-                        <div class="led-meter-v"><div class="led-fill" id="meter-signal"></div></div>
-                        <label>SIGNAL</label>
+                        <label class="bebas">SIGNAL</label>
+                        <div class="led-meter-v"><div class="led-fill" style="height: 60%"></div></div>
                     </div>
                     
                     <div class="knob-main-group">
-                        <div class="knob-hw large" id="knob-pitch"><div class="indicator"></div></div>
-                        <label>PITCH</label>
-                        <div class="knob-hw medium" id="knob-speed"><div class="indicator"></div></div>
-                        <label>SPEED</label>
+                        <div class="knob-hw large"><div class="indicator"></div></div>
+                        <label class="bebas">PITCH</label>
+                        <div class="knob-hw medium"><div class="indicator"></div></div>
+                        <label class="bebas">SPEED</label>
                     </div>
 
                     <div class="meter-group">
-                        <label>TUNE</label>
-                        <div class="led-meter-v"><div class="led-fill" id="meter-tune"></div></div>
-                        <label>TUNE</label>
+                        <label class="bebas">TUNE</label>
+                        <div class="led-meter-v"><div class="led-fill" style="height: 30%"></div></div>
                     </div>
                 </div>
                 <div class="module-footer">
@@ -67,58 +66,32 @@
 
             <!-- SECTION: OPTO COMPRESSOR -->
             <section class="module-box opto">
+                <div class="screw top-left small"></div><div class="screw top-right small"></div>
                 <div class="module-title">OPTO COMPRESSOR</div>
                 <div class="module-content horizontal">
                     <div class="knob-main-group">
-                        <div class="knob-hw extra-large" id="knob-opto-red"><div class="indicator"></div></div>
-                        <label>PEAK RED.</label>
+                        <div class="knob-hw extra-large"><div class="indicator"></div></div>
+                        <label class="bebas">PEAK RED.</label>
                     </div>
                     <div class="meter-columns">
-                        <div class="led-meter-v mini"><div class="led-fill" id="meter-opto-gr"></div></div>
-                        <div class="led-meter-v mini"><div class="led-fill" id="meter-opto-out"></div></div>
+                        <div class="led-meter-v mini"><div class="led-fill" style="height: 70%"></div></div>
+                        <div class="led-meter-v mini"><div class="led-fill" style="height: 20%"></div></div>
                     </div>
                     <div class="mini-knobs-stack">
                         <div class="knob-hw mini"><div class="indicator"></div></div>
-                        <label>RATIO</label>
+                        <label class="bebas">RATIO</label>
                         <div class="knob-hw mini"><div class="indicator"></div></div>
-                        <label>GAIN</label>
+                        <label class="bebas">GAIN</label>
                     </div>
                 </div>
                 <div class="module-footer">
-                    <div class="hw-switch-led" id="sw-opto"></div>
-                    <label>OPTO</label>
+                    <div class="hw-switch-led active"></div>
+                    <label class="bebas">OPTO</label>
                 </div>
-            </section>
-
-            <!-- SECTION: FET COMPRESSOR -->
-            <section class="module-box fet">
-                <div class="module-title">FET COMPRESSOR</div>
-                <!-- Complex grid from mockup -->
-                <div class="fet-grid">
-                     <div class="knob-hw large"><div class="indicator"></div></div>
-                     <div class="meter-columns">
-                        <div class="led-meter-v"><div class="led-fill"></div></div>
-                        <div class="led-meter-v"><div class="led-fill"></div></div>
-                     </div>
-                     <div class="knob-hw medium"><div class="indicator"></div></div>
-                </div>
-                <div class="fet-controls-row">
-                    <!-- Smaller knobs (Ratio, Attack, Release, Makeup) -->
-                </div>
-            </section>
-
-            <!-- SECTION: FX BUS -->
-            <section class="module-box fx-bus">
-                <div class="module-title">FX BUS</div>
-                <div class="fx-section">
-                    <label>REVERB</label>
-                    <div class="knob-hw small"><div class="indicator"></div></div>
-                    <div class="led-dot active"></div>
-                </div>
-                <!-- SAT, DELAY etc -->
             </section>
 
         </div>
+        <div class="screw bottom-left"></div><div class="screw bottom-right"></div>
     </div>
     <script src="script.js"></script>
 </body>
