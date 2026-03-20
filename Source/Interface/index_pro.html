@@ -4,119 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="hardware_ui.css">
-    <title>NADA BOSS GIGA-RACK ELITE</title>
-    <style>
-        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #050505; }
-        .rack-main { width: 1300px; padding: 40px 100px; }
-        .rack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        .bebas { font-family: 'Bebas Neue', sans-serif; }
-        .label-sm { font-family: 'Bebas Neue', sans-serif; font-size: 11px; color: #666; text-align: center; display: block; margin-top: 10px; }
-    </style>
+    <link rel="stylesheet" href="style_pro.css">
+    <title>NADA BOSS GIGA-RACK MASTERPIECE</title>
 </head>
 <body>
-    <div class="hw-chassis rack-main">
+    <!-- PROCEDURAL NOISE ENGINE (NO IMAGES) -->
+    <svg style="display:none">
+        <filter id="metal-noise">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05 0.5" numOctaves="10" result="noise" />
+            <feColorMatrix type="saturate" values="0" />
+            <feBlend in="SourceGraphic" in2="noise" mode="soft-light" />
+        </filter>
+    </svg>
+
+    <div class="hw-rack">
+        <div class="brushed-texture"></div>
+        
+        <!-- RACK ARCHITECTURE -->
+        <div class="rack-ear l"><div class="ear-bolt"></div><div class="ear-bolt"></div><div class="ear-bolt"></div></div>
+        <div class="rack-ear r"><div class="ear-bolt"></div><div class="ear-bolt"></div><div class="ear-bolt"></div></div>
+
         <!-- HEADER -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
-            <div>
-                <h1 class="bebas" style="font-size:48px; margin:0; letter-spacing:-2px;">NADA AUDIO</h1>
-                <span class="label-sm" style="text-align:left; font-size:16px; color:#444;">PRO-VOCALIST SUITE // HYPER-NET SCRIPT</span>
+        <div class="master-header">
+            <div class="brand-name">
+                <h1 class="bebas">NADA AUDIO</h1>
+                <span class="label-txt" style="text-align:left; color:#31343a;">PRO-VOCALIST SUITE // 14-STAGE SCRIPTED 3D ENGINE</span>
             </div>
-            <div class="hw-ai-button"><h1>NADA AI</h1></div>
-            <div style="text-align:right;">
-                <h1 class="bebas" style="font-size:48px; margin:0; color:#333;">VST3</h1>
-                <span class="label-sm" style="text-align:right; font-size:16px; color:var(--neon-red);">4K PHOTOREALISTIC RENDERING</span>
+            <div class="ai-halo-button">
+                <h1>NADA AI</h1>
+            </div>
+            <div class="vst-id">
+                <h1 class="bebas">VST3</h1>
+                <span class="label-txt" style="text-align:right; color:var(--neon-red);">HYPER-NET RESOLUTION // JUCE 8.0</span>
             </div>
         </div>
 
+        <!-- THE GIGA RACK GRID -->
         <div class="rack-grid">
-            <!-- 01. AUTOTUNE -->
-            <section class="hw-unit" style="grid-column: span 2;">
-                <h2>01. AUTOTUNE ELITE (REAL-TIME SCRIPT)</h2>
+            
+            <!-- MODULE 1: AUTOTUNE ENGINE -->
+            <section class="rack-unit-box" style="grid-column: span 2;">
+                <h3>01. AUTOTUNE ELITE (KEY & SCALE)</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob xl"></div><span class="label-sm">PITCH CORRECTION</span></div>
-                    <div class="knob-box"><div class="hw-knob"></div><span class="label-sm">SMOOTH / HARD</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">PITCH CORRECTION</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">SMOOTH / HARD</span></div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
-                        <button class="bebas" style="background:#200; border:1px solid #400; color:#f00; padding:10px 20px; font-size:14px;">C# MINOR</button>
-                        <button class="bebas" style="background:#111; border:1px solid #333; color:#444; padding:10px 20px; font-size:14px;">KEY SELECTOR</button>
+                        <button class="bebas" style="background:#200; border:1px solid #500; color:#f00; padding:10px 20px; font-size:16px; cursor:pointer;">C# MINOR</button>
+                        <button class="bebas" style="background:#111; border:1px solid #333; color:#555; padding:10px 20px; font-size:16px;">CHROMATIC</button>
                     </div>
                 </div>
             </section>
 
-            <!-- 02. REDUCTIVE EQ -->
-            <section class="hw-unit">
-                <h2>02. REDUCTIVE MUD EQ</h2>
-                <div style="display:flex; justify-content:center; gap:20px; align-items:center;">
-                    <div class="hw-knob xl"></div>
-                    <div class="hw-meter" style="width:10px; height:100px;">
-                        <div class="hw-meter-segment on"></div><div class="hw-meter-segment on"></div><div class="hw-meter-segment on"></div>
-                        <div class="hw-meter-segment"></div><div class="hw-meter-segment"></div><div class="hw-meter-segment"></div>
+            <!-- MODULE 2: MUD EQ -->
+            <section class="rack-unit-box">
+                <h3>02. REDUCTIVE MUD EQ</h3>
+                <div style="display:flex; justify-content:center; align-items:center; gap:25px;">
+                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">CUT DEPTH</span></div>
+                    <div class="meter-column">
+                        <div class="led-seg on"></div><div class="led-seg on"></div><div class="led-seg on"></div>
+                        <div class="led-seg on"></div><div class="led-seg"></div><div class="led-seg"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- 03. FET 1176 -->
-            <section class="hw-unit">
-                <h2>03. FET 1176 COMP</h2>
+            <!-- MODULE 3 & 4: DYNAMICS GANG -->
+            <section class="rack-unit-box">
+                <h3>03-04. PRIMARY COMP (FET / OPTO)</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob"></div><span class="label-sm">THRESHOLD</span></div>
-                    <div class="knob-box"><div class="hw-knob sm"></div><span class="label-sm">RATIO</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">1176 FET</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d xl" style="transform:rotate(45deg)"></div><span class="label-txt">LA-2A OPTO</span></div>
                 </div>
             </section>
 
-            <!-- 04. LA-2A -->
-            <section class="hw-unit">
-                <h2>04. OPTO LA-2A</h2>
-                <div style="display:flex; justify-content:center; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob xl" style="transform:rotate(50deg)"></div><span class="label-sm">PEAK REDUCTION (-5DB)</span></div>
+            <!-- MODULE 5, 6, 7: TONAL COLOR -->
+            <section class="rack-unit-box">
+                <h3>05-07. ANALOG COLOR (EQP / SSL / SAT)</h3>
+                <div style="display:flex; justify-content:space-around; align-items:center;">
+                    <div class="knob-cell"><div class="knob-pro-3d sm"></div><span class="label-txt">EQP-1A</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">SSL EQ</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d sm"></div><span class="label-txt">GRAIN SAT</span></div>
                 </div>
             </section>
 
-            <!-- 05, 06, 07. TONE & COLOR -->
-            <section class="hw-unit" style="grid-column: span 2;">
-                <h2>05-07. TONAL COLOR (EQP-1A / SSL EQ / SATURATION)</h2>
+            <!-- MODULE 8, 9, 10: VOCAL SURGERY -->
+            <section class="rack-unit-box">
+                <h3>08-10. VOCAL SURGERY (DE-ESS / FINAL EQ)</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob"></div><span class="label-sm">EQP-1A AIR</span></div>
-                    <div class="knob-box"><div class="hw-knob"></div><span class="label-sm">SSL CONSOLE EQ</span></div>
-                    <div class="knob-box"><div class="hw-knob"></div><span class="label-sm">SMOOTH GRAIN</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">FINAL COMP</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d sm"></div><span class="label-txt">DE-ESSER</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">FINAL EQ</span></div>
                 </div>
             </section>
 
-            <!-- 08, 09, 10. SURGERY -->
-            <section class="hw-unit">
-                <h2>08-10. SURGERY UNIT</h2>
+            <!-- MODULE 11, 12: THE MASTERS -->
+            <section class="rack-unit-box">
+                <h3>11-12. MASTERING UNIT (WIDTH / LIMITER)</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob sm"></div><span class="label-sm">FINAL COMP</span></div>
-                    <div class="knob-box"><div class="hw-knob sm"></div><span class="label-sm">DE-ESSER</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">STEREO WIDTH</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">HP LIMITER</span></div>
                 </div>
             </section>
 
-            <!-- 11, 12. MASTERING -->
-            <section class="hw-unit" style="grid-column: span 2;">
-                <h2>11-12. MASTERING UNIT (WIDTH / LIMITER)</h2>
+            <!-- MODULE 13, 14: BUS FX -->
+            <section class="rack-unit-box" style="grid-column: span 3;">
+                <h3>13-14. SEND BUS EFFECTS (REVERB / DELAY)</h3>
                 <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob"></div><span class="label-sm">STEREO WIDTH</span></div>
-                    <div class="knob-box"><div class="hw-knob xl"></div><span class="label-sm">-10 LUFS LIMITER</span></div>
-                    <div style="display:flex; gap:4px;">
-                        <div class="hw-meter" style="height:120px; width:12px;"></div>
-                        <div class="hw-meter" style="height:120px; width:12px;"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 13, 14. BUS FX -->
-            <section class="hw-unit" style="grid-column: span 2;">
-                <h2>13-14. SEND BUS EFFECTS (REVERB / DELAY)</h2>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-box"><div class="hw-knob xl"></div><span class="label-sm">ROOM REVERB</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">CHAMBER REVERB</span></div>
                     <div style="display:flex; flex-direction:column; gap:20px;">
                         <div style="width:12px; height:12px; background:var(--neon-red); border-radius:50%; box-shadow:var(--red-glow);"></div>
                         <div style="width:12px; height:12px; background:var(--neon-red); border-radius:50%; box-shadow:var(--red-glow);"></div>
                     </div>
-                    <div class="knob-box"><div class="hw-knob xl"></div><span class="label-sm">TAPE DELAY</span></div>
+                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">TAPE DELAY</span></div>
                 </div>
             </section>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
