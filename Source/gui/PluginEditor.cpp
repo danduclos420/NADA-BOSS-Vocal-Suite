@@ -1,3 +1,4 @@
+#define JUCE_USE_WIN_WEBVIEW2 1
 #include "../dsp/PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -47,16 +48,6 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     // Bright Core
     g.setColour (juce::Colours::red.withBrightness(1.2f));
     g.fillPath (p);
-}
-
-// Placeholder for ONNXModelManager related functionality
-// This function is added to address potential warnings or provide a stub for model inference.
-std::vector<float> NADALookAndFeel::runInference(const std::vector<float>& inputData)
-{
-    juce::ignoreUnused (inputData);
-    // Simple 1D float vector inference stub
-    // In a real scenario, we'd map this to a specific model output
-    return { 0.5f, 0.7f }; 
 }
 
 void NADALookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& button,
