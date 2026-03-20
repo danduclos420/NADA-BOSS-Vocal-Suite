@@ -114,7 +114,7 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     webView = std::make_unique<juce::WebBrowserComponent>(options);
 
     addAndMakeVisible (*webView);
-    webView->goToURL ("http://localhost/");
+    webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
     startTimerHz(30);
     setSize (1000, 750);
