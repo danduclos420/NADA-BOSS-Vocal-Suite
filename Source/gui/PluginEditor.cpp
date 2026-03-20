@@ -88,7 +88,15 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     auto options = juce::WebBrowserComponent::Options{}
         .withResourceProvider ([this](const juce::String& url) {
             auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
-            auto file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
+            
+            // 1. Try relative to the plugin binary (Bundle mode)
+            auto binaryFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
+            auto file = binaryFile.getChildFile("../../../Source/Interface").getChildFile(fileName);
+            
+            // 2. Fallback to Working Directory (Development mode)
+            if (!file.existsAsFile())
+                file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
+                
             if (file.existsAsFile()) {
                 juce::MemoryBlock mb;
                 if (file.loadFileAsData(mb)) {
