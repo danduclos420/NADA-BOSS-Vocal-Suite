@@ -30,7 +30,7 @@ body {
 /* GRID LAYOUT */
 .main-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; height: 100%; }
 
-/* KNOB 2.0 - BX STYLE */
+/* KNOB 2.0 - BX STYLE WITH INDENTATIONS */
 .knob-unit { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
 
 .knob-bezel {
@@ -38,6 +38,23 @@ body {
   display: flex; justify-content: center; align-items: center;
   box-shadow: inset 1px 1px 3px #000, 1px 1px 1px rgba(255,255,255,0.03);
   position: relative;
+}
+
+.knob-bezel::before {
+  content: ""; position: absolute; top: -4px; left: -4px; right: -4px; bottom: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 70%, rgba(0,0,0,0.5) 75%, transparent 80%);
+  border: 1px solid rgba(255,255,255,0.02);
+  pointer-events: none;
+}
+
+/* Decorative holes around knob */
+.knob-holes {
+  position: absolute; width: 100%; height: 100%; pointer-events: none;
+}
+.knob-hole {
+  position: absolute; width: 2px; height: 2px; background: #000; border-radius: 50%;
+  box-shadow: 0.5px 0.5px 0px rgba(255,255,255,0.05);
 }
 
 .knob-body {
