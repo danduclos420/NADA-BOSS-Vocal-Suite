@@ -84,33 +84,23 @@ void NADALookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& but
 NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setLookAndFeel (&customLookAndFeel);
+    // --- 1. SETUP WEB VIEW ---
+    webView = std::make_unique<juce::WebBrowserComponent>(
+        juce::WebBrowserComponent::Options{}
+            .withResourceProvider ([this](const juce::String& url) {
+                // Determine file path
+                auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
+                auto file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
+                
+                if (file.existsAsFile())
+                    return std::make_optional (juce::WebBrowserComponent::Resource { file.loadFileAsData(), file.getFileExtension().replace(".", "") });
+                
+                return std::optional<juce::WebBrowserComponent::Resource>{};
+            })
+    );
 
-    auto setupSlider = [this](juce::Slider& s, const juce::String& paramID, std::unique_ptr<SliderAttachment>& att)
-    {
-        addAndMakeVisible(s);
-        s.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-        s.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-        att = std::make_unique<SliderAttachment>(audioProcessor.apvts, paramID, s);
-    };
-
-    // SLOT 1: AI
-    setupSlider(autotuneSpeedSlider, "AUTOTUNE_SPEED", autotuneSpeedAtt);
-    
-    // SLOT 2: DYNAMICS
-    setupSlider(fetThreshSlider, "FET_THRESH", fetThreshAtt);
-    setupSlider(fetRatioSlider, "FET_RATIO", fetRatioAtt);
-    setupSlider(optoThreshSlider, "OPTO_THRESH", optoThreshAtt);
-
-    // SLOT 3: FX
-    setupSlider(reverbMixSlider, "REVERB_MIX", reverbMixAtt);
-    setupSlider(delayMixSlider, "DELAY_MIX", delayMixAtt);
-    setupSlider(stereoWidthSlider, "AIR", stereoWidthAtt); // Using AIR param for texture
-
-    // NADA Button
-    addAndMakeVisible(nadaButton);
-    nadaButton.setButtonText("ACTIVATE NADA AI");
-    nadaButton.addListener(this);
+    addAndMakeVisible (*webView);
+    webView->goToURL ("http://localhost/");
 
     startTimerHz(30);
     setSize (1000, 650);
@@ -118,113 +108,24 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
 
 NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
 {
-    setLookAndFeel (nullptr);
 }
 
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // --- SINFUL DARK METAL BACKGROUND ---
-    g.fillAll (juce::Colour (0xff0d0d0d));
-    
-    // Brushed Grain Texture Simulation
-    auto& random = juce::Random::getSystemRandom();
-    for (int i = 0; i < 2000; ++i) {
-        g.setColour (juce::Colours::white.withAlpha (random.nextFloat() * 0.03f));
-        g.drawRect (random.nextInt (getWidth()), random.nextInt (getHeight()), 1, 1);
-    }
-
-    // Rack Structure Dividers
-    g.setColour (juce::Colours::black);
-    g.fillRect (0.0f, 100.0f, (float)getWidth(), 4.0f); // Top divider
-    g.fillRect (0.0f, 480.0f, (float)getWidth(), 4.0f); // Bottom divider
-
-    // --- ACCENT GLOW (Red Header) ---
-    g.setGradientFill (juce::ColourGradient (juce::Colours::red.withAlpha (0.08f), 0, 0,
-                                            juce::Colours::transparentWhite, 0, 100, false));
-    g.fillRect (0, 0, getWidth(), 100);
-
-    // Titles
-    g.setColour (juce::Colours::red);
-    g.setFont (juce::Font ("Inter", 42.0f, juce::Font::bold));
-    g.drawText ("NADA BOSS", 40, 20, 300, 60, juce::Justification::left);
-    
-    g.setColour (juce::Colours::white.withAlpha (0.4f));
-    g.setFont (12.0f);
-    g.drawText ("V3 // ULTIMATE SINFUL METAL RACK", 42, 65, 400, 20, juce::Justification::left);
-
-    // --- SECTION LABELS ---
-    auto drawLabel = [&](int x, int y, int w, juce::String text) {
-        g.setColour (juce::Colours::white.withAlpha (0.2f));
-        g.setFont (juce::Font (12.0f, juce::Font::bold));
-        g.drawText (text, x, y, w, 20, juce::Justification::centred);
-        g.setColour (juce::Colours::red.withAlpha (0.3f));
-        g.drawHorizontalLine (y + 18, (float)x, (float)(x + w));
-    };
-
-    drawLabel (50, 120, 280, "AI TREATMENT");
-    drawLabel (350, 120, 300, "DYNAMIC SURGERY");
-    drawLabel (680, 120, 280, "TEXTURE & SPACE");
-
-    // --- ANALOG VU METERS ---
-    auto drawVU = [&](int x, int y, float val, juce::String label) {
-        g.setColour (juce::Colour (0xff050505));
-        g.fillRoundedRectangle (x, y, 160, 100, 4.0f);
-        g.setColour (juce::Colours::red.withAlpha (0.4f));
-        g.drawRoundedRectangle (x, y, 160, 100, 4.0f, 1.5f);
-        
-        // Needle Pivot
-        float cx = x + 80.0f;
-        float cy = y + 105.0f;
-        float angle = juce::jmap (val, 0.0f, 1.0f, -0.7f, 0.7f);
-        
-        g.setColour (juce::Colours::red.withBrightness(1.5f));
-        g.setOpacity(0.9f);
-        g.drawLine (cx, cy, cx + std::sin(angle)*90, cy - std::cos(angle)*90, 2.5f);
-        
-        g.setColour (juce::Colours::white.withAlpha (0.5f));
-        g.setFont (10.0f);
-        g.drawText (label, x, y + 80, 160, 20, juce::Justification::centred);
-    };
-
-    drawVU (100, 500, inputMeter.val, "INPUT (dB)");
-    drawVU (420, 500, gainReductionMeter.val, "COMPRESSION (dB)");
-    drawVU (740, 500, outputMeter.val, "OUTPUT (dB)");
 }
 
 void NADAAudioProcessorEditor::resized()
 {
-    // SLOT 1 (50-330)
-    autotuneSpeedSlider.setBounds(90, 160, 200, 200);
-    
-    // SLOT 2 (350-650)
-    fetThreshSlider.setBounds(370, 150, 120, 120);
-    optoThreshSlider.setBounds(510, 150, 120, 120);
-    fetRatioSlider.setBounds(440, 280, 120, 120);
-
-    // SLOT 3 (680-960)
-    reverbMixSlider.setBounds(710, 150, 110, 110);
-    delayMixSlider.setBounds(850, 150, 110, 110);
-    stereoWidthSlider.setBounds(780, 280, 120, 120);
-
-    // NADA Button
-    nadaButton.setBounds(getWidth()/2 - 100, 420, 200, 40);
-}
-
-void NADAAudioProcessorEditor::buttonClicked (juce::Button* button)
-{
-    if (button == &nadaButton) audioProcessor.triggerNADAAnalysis();
+    webView->setBounds (getLocalBounds());
 }
 
 void NADAAudioProcessorEditor::timerCallback()
 {
-    // Smooth meter movement (Needle Inertia - Simulating Analog Physics)
-    auto targetIn = audioProcessor.inputLevel.load() * 1.5f; // Calibration
-    auto targetOut = audioProcessor.outputLevel.load() * 1.5f;
-    auto targetGR = audioProcessor.grLevel.load() * 2.0f;
-
-    inputMeter.val += (targetIn - inputMeter.val) * 0.15f;
-    outputMeter.val += (targetOut - outputMeter.val) * 0.15f;
-    gainReductionMeter.val += (targetGR - gainReductionMeter.val) * 0.08f;
-
-    repaint();
+    // Send telemetry to JS
+    auto input = audioProcessor.inputLevel.load();
+    auto gr = audioProcessor.grLevel.load();
+    auto output = audioProcessor.outputLevel.load();
+    
+    juce::String js = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
+    webView->executeJavaScript(js);
 }

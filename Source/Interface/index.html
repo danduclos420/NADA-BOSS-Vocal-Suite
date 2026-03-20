@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>NADA BOSS V3</title>
+</head>
+<body>
+    <div class="rack-chassis">
+        <header>
+            <div class="brand">
+                <h1 class="logo">NADA BOSS</h1>
+                <p class="subtitle">ULTIMATE SINFUL METAL // V3.0</p>
+            </div>
+            <div class="analyzer-screen">
+                <canvas id="canvas-analyzer"></canvas>
+            </div>
+        </header>
+
+        <main class="rack-slots">
+            <!-- SLOT 1: AI & AUTOTUNE -->
+            <section class="slot" id="slot-ai">
+                <div class="slot-label">STAGE 1: AI TREATMENT</div>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label>RETUNE SPEED</label>
+                        <div class="knob large" id="knob-speed"><div class="indicator"></div></div>
+                    </div>
+                    <div class="mini-display">
+                        <div class="pitch-info">NOTE: <span id="pitch-val">C#</span></div>
+                        <div class="pitch-meter"><div class="pitch-bar" style="width: 70%"></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLOT 2: DYNAMICS -->
+            <section class="slot" id="slot-dyn">
+                <div class="slot-label">STAGE 2: DYNAMIC SURGERY</div>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label>FET THRESH</label>
+                        <div class="knob" id="knob-fet"><div class="indicator"></div></div>
+                    </div>
+                    <div class="control-group">
+                        <label>OPTO RED.</label>
+                        <div class="knob" id="knob-opto"><div class="indicator"></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLOT 3: TONAL & FX -->
+            <section class="slot" id="slot-fx">
+                <div class="slot-label">STAGE 3: TEXTURE & SPACE</div>
+                <div class="controls-grid">
+                     <div class="control-group">
+                        <label>AIR SPARKLE</label>
+                        <div class="knob" id="knob-air"><div class="indicator"></div></div>
+                    </div>
+                    <div class="control-group">
+                        <label>REVERB</label>
+                        <div class="knob" id="knob-reverb"><div class="indicator"></div></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="vu-meters">
+                <div class="vu-meter"><label>INPUT</label><div class="vu-glass"><div class="needle" id="needle-in"></div></div></div>
+                <div class="vu-meter"><label>G. REDUCTION</label><div class="vu-glass"><div class="needle" id="needle-gr"></div></div></div>
+                <div class="vu-meter"><label>OUTPUT</label><div class="vu-glass"><div class="needle" id="needle-out"></div></div></div>
+            </div>
+            <button class="btn-ai" id="btn-activate">ACTIVATE CORE AI</button>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

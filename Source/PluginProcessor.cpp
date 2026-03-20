@@ -35,11 +35,10 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    if (totalNumInputChannels < 2) return;
-
     // --- 1. CAPTURE DATA FOR AI ---
+    auto* channel0 = buffer.getReadPointer(0);
     for (int i=0; i<buffer.getNumSamples(); ++i) {
-        analysisBuffer[analysisBufferPos] = (buffer.getSample(0, i) + buffer.getSample(1, i)) * 0.5f;
+        analysisBuffer[analysisBufferPos] = channel0[i];
         analysisBufferPos = (analysisBufferPos + 1) % (int)analysisBuffer.size();
     }
 
@@ -121,35 +120,26 @@ void NADAAudioProcessor::runSpectralAnalysis()
         else if (freq < 4000.0f) { mid += mag; midBins++; }
         else if (freq < 15000.0f) { high += mag; highBins++; }
         
-        if (freq > 5000.0f && freq < 8000.0f) { sib += mag; sibBins++; }
+        centroid += freq * mag;
+        totalEnergy += mag;
+        
+        if (freq > 5000.0f) sibilanceEnergy += mag;
     }
 
-    lastAnalysis.lowEnergy = low / (float)juce::jmax(1, lowBins);
-    lastAnalysis.midEnergy = mid / (float)juce::jmax(1, midBins);
-    lastAnalysis.highEnergy = high / (float)juce::jmax(1, highBins);
-    lastAnalysis.sibilance = sib / (float)juce::jmax(1, sibBins);
-    lastAnalysis.tilt = lastAnalysis.highEnergy - lastAnalysis.lowEnergy;
-
-    // --- 4. THE "LEGENDARY" AI DECISION ENGINE (ONNX Neural Matching) ---
-    std::vector<float> inputFeatures = { 
-        lastAnalysis.lowEnergy, 
-        lastAnalysis.midEnergy, 
-        lastAnalysis.highEnergy, 
-        lastAnalysis.tilt, 
-        lastAnalysis.sibilance 
-    };
-    
-    auto aiSettings = onnxManager.runInference(inputFeatures);
-    
-    auto* speedParam = apvts.getParameter("AUTOTUNE_SPEED");
-    auto* airParam = apvts.getParameter("FET_RATIO"); 
-
-    // Neural-Driven Mapping (Example: AI predicts optimal retune speed and air)
-    if (aiSettings.size() >= 2)
-    {
-        speedParam->setValueNotifyingHost(aiSettings[0]);
-        airParam->setValueNotifyingHost(aiSettings[1]);
+    if (totalEnergy > 0.0001f) {
+        lastAnalysis.lowEnergy = totalEnergy / numBins;
+        lastAnalysis.midEnergy = centroid / (totalEnergy * 20000.0f); // Normalized
+        lastAnalysis.highEnergy = sibilanceEnergy / totalEnergy;
     }
+
+    // AI MAPPING (Rule-Based for "Gold" stability)
+    // 1. If sibilance is high, increase De-esser
+    auto* deesserParam = apvts.getParameter("DEESSER_RANGE");
+    if (lastAnalysis.highEnergy > 0.3f) deesserParam->setValueNotifyingHost(0.6f); 
+    
+    // 2. If brightness is low, increase Air
+    auto* airParam = apvts.getParameter("AIR");
+    if (lastAnalysis.midEnergy < 0.2f) airParam->setValueNotifyingHost(0.4f);
 
     analysisRequested = false;
 }

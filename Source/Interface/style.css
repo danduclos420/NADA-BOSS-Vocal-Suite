@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+:root {
+    --bg-charcoal: #0a0a0a;
+    --metal-gradient: linear-gradient(180deg, #222 0%, #0d0d0d 100%);
+    --neon-red: #ff0000;
+    --red-glow: 0 0 10px rgba(255, 0, 0, 0.6);
+}
+
+body {
+    background-color: var(--bg-charcoal);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    width: 1000px;
+    height: 650px;
+    overflow: hidden;
+    user-select: none;
+}
+
+.rack-chassis {
+    width: 100%;
+    height: 100%;
+    background-image: var(--metal-gradient);
+    border: 3px solid #1a1a1a;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    height: 120px;
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 4px solid #000;
+}
+
+.logo {
+    color: var(--neon-red);
+    font-weight: 900;
+    font-size: 42px;
+    margin: 0;
+    text-shadow: var(--red-glow);
+    letter-spacing: -2px;
+}
+
+.subtitle {
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-top: -5px;
+}
+
+.analyzer-screen {
+    width: 400px;
+    height: 80px;
+    background: #000;
+    border: 2px solid var(--neon-red);
+    border-radius: 4px;
+    box-shadow: inset 0 0 20px rgba(255,0,0,0.2);
+}
+
+.rack-slots {
+    flex: 1;
+    display: flex;
+    padding: 20px;
+    gap: 15px;
+}
+
+.slot {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255,0,0,0.1);
+    position: relative;
+    padding: 20px;
+}
+
+.slot-label {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: #0a0a0a;
+    padding: 0 10px;
+    font-size: 10px;
+    color: var(--neon-red);
+    font-weight: bold;
+}
+
+/* KNOBS */
+.knob {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, #333 0%, #111 70%);
+    border-radius: 50%;
+    margin: 20px auto;
+    position: relative;
+    box-shadow: 8px 8px 20px rgba(0,0,0,0.8), -2px -2px 5px rgba(255,255,255,0.05);
+    cursor: pointer;
+}
+
+.knob.large {
+    width: 140px;
+    height: 140px;
+}
+
+.knob .indicator {
+    width: 4px;
+    height: 40%;
+    background: var(--neon-red);
+    position: absolute;
+    top: 10%;
+    left: calc(50% - 2px);
+    border-radius: 2px;
+    box-shadow: var(--red-glow);
+    transform-origin: 50% 100%;
+}
+
+.control-group label {
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    font-weight: bold;
+}
+
+/* FOOTER & METERS */
+footer {
+    height: 150px;
+    background: #050505;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 40px;
+    border-top: 2px solid #222;
+}
+
+.vu-meter {
+    text-align: center;
+    width: 180px;
+}
+
+.vu-glass {
+    height: 80px;
+    background: #000;
+    border-radius: 4px;
+    border: 1px solid rgba(255,0,0,0.3);
+    margin-top: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.needle {
+    width: 2px;
+    height: 100%;
+    background: var(--neon-red);
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform-origin: 50% 100%;
+    transition: transform 0.1s ease-out;
+}
+
+.btn-ai {
+    background: var(--neon-red);
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    font-weight: 900;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: var(--red-glow);
+}

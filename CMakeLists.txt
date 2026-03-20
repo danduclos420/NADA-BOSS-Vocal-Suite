@@ -38,8 +38,8 @@ target_sources(NADA_BOSS_VOCAL_SUITE PRIVATE
 # 5. Dependencies
 target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     PUBLIC
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
+    JUCE_WEB_BROWSER=1
+    JUCE_USE_CURL=1
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
