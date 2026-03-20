@@ -9,7 +9,7 @@ NADALookAndFeel::NADALookAndFeel()
 
 void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                                        float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
-                                       juce::Slider& slider) override
+                                       juce::Slider& slider)
 {
     juce::ignoreUnused(slider);
     auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (8);
