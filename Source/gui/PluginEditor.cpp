@@ -89,28 +89,29 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
         .withResourceProvider ([this](const juce::String& url) {
             auto fileName = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
             auto file = juce::File::getCurrentWorkingDirectory().getChildFile("Source").getChildFile("Interface").getChildFile(fileName);
-            if (file.existsAsFile())
-                return std::make_optional (juce::WebBrowserComponent::Resource { file.loadFileAsData(), file.getFileExtension().replace(".", "") });
+            if (file.existsAsFile()) {
+                juce::MemoryBlock mb;
+                if (file.loadFileAsData(mb)) {
+                    return std::make_optional(juce::WebBrowserComponent::Resource { 
+                        std::vector<std::byte>((const std::byte*)mb.getData(), (const std::byte*)mb.getData() + mb.getSize()),
+                        file.getFileExtension().replace(".", "") 
+                    });
+                }
+            }
             return std::optional<juce::WebBrowserComponent::Resource>{};
+        })
+        .withNativeIntegrationEnabled(true)
+        .withNativeFunction ("setParam", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+            if (args.size() >= 2) {
+                juce::String paramID = args[0].toString();
+                float value = (float)args[1];
+                if (auto* param = audioProcessor.apvts.getParameter(paramID))
+                    param->setValueNotifyingHost(value);
+            }
+            completion(juce::var());
         });
 
     webView = std::make_unique<juce::WebBrowserComponent>(options);
-    
-    // This line is typically in the processor's createParameterLayout, but added here as per instruction.
-    // Assuming 'params' is a member or accessible here, or this is a placeholder for the actual parameter layout creation.
-    // For a functional plugin, this parameter should be added to the AudioProcessorValueTreeState in PluginProcessor.cpp.
-    // params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_KEY", "Key", juce::StringArray({"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}), 0));
-
-    // --- 2. NATIVE BRIDGE (JS -> C++) ---
-    webView->addNativeAlias ("juce", [this] (const juce::var& method, const juce::Array<juce::var>& args) {
-        if (method == "setParam" && args.size() >= 2) {
-            juce::String paramID = args[0].toString();
-            float value = (float)args[1];
-            if (auto* param = audioProcessor.apvts.getParameter(paramID))
-                param->setValueNotifyingHost(value);
-        }
-        return juce::var();
-    });
 
     addAndMakeVisible (*webView);
     webView->goToURL ("http://localhost/");
@@ -140,20 +141,20 @@ void NADAAudioProcessorEditor::timerCallback()
     auto output = audioProcessor.outputLevel.load();
     
     juce::String meterJs = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
-    webView->evaluateJavaScript(meterJs);
+    webView->evaluateJavascript(meterJs);
 
     // 2. Spectrum (Simplified telemetry)
     juce::String specJs = juce::String::formatted("if(window.updateSpectrum) updateSpectrum([%f, %f, %f]);", 
         audioProcessor.lastAnalysis.lowEnergy, 
         audioProcessor.lastAnalysis.midEnergy, 
         audioProcessor.lastAnalysis.highEnergy);
-    webView->evaluateJavaScript(specJs);
+    webView->evaluateJavascript(specJs);
     
     // 3. LED Displays
     auto speed = audioProcessor.apvts.getRawParameterValue("AUTOTUNE_SPEED")->load();
     juce::String ledJs = juce::String::formatted("if(window.updateLedDisplay) updateLedDisplay('note', 'C#');"); // Note detection logic here
-    webView->evaluateJavaScript(ledJs);
+    webView->evaluateJavascript(ledJs);
 
     // 4. Goniometer (Simplified)
-    webView->evaluateJavaScript("if(window.updateGoniometer) updateGoniometer([0.1, 0.2, -0.1, 0.3]);");
+    webView->evaluateJavascript("if(window.updateGoniometer) updateGoniometer([0.1, 0.2, -0.1, 0.3]);");
 }
