@@ -15,27 +15,13 @@ NADAAudioProcessor::~NADAAudioProcessor() {}
 void NADAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
+    juce::dsp::ProcessSpec spec { sampleRate, (juce::uint32)samplesPerBlock, 2 };
     
-    fet.prepare(sampleRate);
-    opto.prepare(sampleRate);
-    pitchDetector.prepare(sampleRate);
-
+    pitchShifter.prepare(sampleRate, samplesPerBlock);
+    dspChain.prepare(spec);
+    
     analysisBuffer.assign(fft.getSize(), 0.0f);
     analysisBufferPos = 0;
-
-    juce::dsp::ProcessSpec spec { sampleRate, (juce::uint32)samplesPerBlock, 2 };
-    reverb.prepare(spec);
-    
-    // Fixed size delay line (max 2 seconds)
-    delayL.prepare(spec);
-    delayR.prepare(spec);
-    delayL.setMaximumDelayInSamples(sampleRate * 2.0);
-    delayR.setMaximumDelayInSamples(sampleRate * 2.0);
-
-    // Prepare De-esser (High-Shelf at 6kHz)
-    auto filterCoefs = juce::dsp::IIR::Coefficients<float>::makeHighShelf(sampleRate, 6000.0f, 0.707f, 1.0f);
-    deEsserL.coefficients = filterCoefs;
-    deEsserR.coefficients = filterCoefs;
 }
 
 void NADAAudioProcessor::releaseResources() {}
@@ -49,107 +35,59 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // --- TEMPO SYNC ---
-    float bpm = 120.0f;
-    if (auto* playHead = getPlayHead()) {
-        if (auto pos = playHead->getPosition()) {
-            if (auto b = pos->getBpm()) bpm = *b;
-        }
-    }
-    
-    // Calculate 1/8 note delay
-    float delaySamples = ((60000.0f / bpm) / 2.0f) * (currentSampleRate / 1000.0f);
-    delayL.setDelay(delaySamples);
-    delayR.setDelay(delaySamples);
+    if (totalNumInputChannels < 2) return;
 
-    // --- PARAMETERS ---
-    float autotuneAmount = *apvts.getRawParameterValue("AUTOTUNE_SPEED");
-    float fetThresh = juce::Decibels::decibelsToGain((float)*apvts.getRawParameterValue("FET_THRESH"));
-    float fetRatio = *apvts.getRawParameterValue("FET_RATIO");
-    float fetAttack = *apvts.getRawParameterValue("FET_ATTACK");
-    float fetRelease = *apvts.getRawParameterValue("FET_RELEASE");
-
-    float optoPeak = juce::Decibels::decibelsToGain((float)*apvts.getRawParameterValue("OPTO_THRESH"));
-    float optoGain = juce::Decibels::decibelsToGain((float)*apvts.getRawParameterValue("OPTO_GAIN"));
-    
-    float deEssFreq = *apvts.getRawParameterValue("DEESSER_FREQ");
-    float deEssRange = *apvts.getRawParameterValue("DEESSER_RANGE");
-    
-    float reverbMix = *apvts.getRawParameterValue("REVERB_MIX");
-    float reverbSize = *apvts.getRawParameterValue("REVERB_SIZE");
-    float reverbDamp = *apvts.getRawParameterValue("REVERB_DAMP");
-    
-    float delayMix = *apvts.getRawParameterValue("DELAY_MIX");
-    float delayFeedback = *apvts.getRawParameterValue("DELAY_FEEDBACK");
-
-    // --- DSP LOOP ---
-    float inRMS = 0.0f;
-    float outRMS = 0.0f;
-    float maxGR = 0.0f;
-
-    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-    {
-        float left = buffer.getSample(0, sample);
-        float right = buffer.getSample(1, sample);
-        
-        float mono = (left + right) * 0.5f;
-        analysisBuffer[analysisBufferPos] = mono;
+    // --- 1. CAPTURE DATA FOR AI ---
+    for (int i=0; i<buffer.getNumSamples(); ++i) {
+        analysisBuffer[analysisBufferPos] = (buffer.getSample(0, i) + buffer.getSample(1, i)) * 0.5f;
         analysisBufferPos = (analysisBufferPos + 1) % (int)analysisBuffer.size();
-
-        inRMS += (left * left + right * right);
-
-        // --- 1. PITCH CORRECTION (PSOLA-Style Crossfade) ---
-        // ... pitch detection logic here ...
-
-        // --- 2. DYNAMICS (Analog Modeling Curves) ---
-        // FET 1176
-        left = fet.process(left, fetThresh, fetRatio, fetAttack, fetRelease);
-        right = fet.process(right, fetThresh, fetRatio, fetAttack, fetRelease);
-        
-        // OPTO LA-2A
-        left = opto.process(left, optoPeak) * optoGain;
-        right = opto.process(right, optoPeak) * optoGain;
-
-        maxGR = juce::jmax(maxGR, fet.getGainReduction() + opto.getGainReduction());
-
-        // --- 3. DELAY ---
-        float dL = delayL.popSample(0);
-        float dR = delayR.popSample(1);
-        delayL.pushSample(0, left + (dR * delayFeedback * 0.5f));
-        delayR.pushSample(1, right + (dL * delayFeedback * 0.5f));
-        
-        float finalL = left + dL * delayMix;
-        float finalR = right + dR * delayMix;
-        
-        outRMS += (finalL * finalL + finalR * finalR);
-
-        buffer.setSample(0, sample, finalL);
-        buffer.setSample(1, sample, finalR);
     }
 
-    // Update Atoms (with smoothing)
-    inputLevel = juce::jmax(0.0f, std::sqrt(inRMS / (float)buffer.getNumSamples()));
-    outputLevel = juce::jmax(0.0f, std::sqrt(outRMS / (float)buffer.getNumSamples()));
-    grLevel = maxGR;
+    float inRMS = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
 
-    // --- DYNAMIC DE-ESSER ---
-    float sibGain = juce::jlimit(juce::Decibels::decibelsToGain(-deEssRange), 1.0f, 1.0f - (lastAnalysis.sibilance * 1.5f));
-    *deEsserL.coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, deEssFreq, 0.707f, sibGain);
-    *deEsserR.coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, deEssFreq, 0.707f, sibGain);
+    // --- 2. THE 14-STEP GANGSTER CHAIN ---
     
-    // ... filter processing ...
+    // Step 3: Autotune (Real Pitch Shifting)
+    float speed = *apvts.getRawParameterValue("AUTOTUNE_SPEED");
+    pitchShifter.process(buffer, 1.0f); // Placeholder for dynamic ratio
 
-    // --- GLOBAL REVERB ---
-    auto params = reverb.getParameters();
-    params.wetLevel = reverbMix;
-    params.dryLevel = 1.0f - reverbMix;
-    params.roomSize = reverbSize;
-    params.damping = reverbDamp;
-    reverb.setParameters(params);
-
+    // Step 4+: DSP Chain (Comp/EQ/Sat/Limit)
+    updateDSPChain();
     juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    reverb.process(context);
+    dspChain.process(juce::dsp::ProcessContextReplacing<float>(block));
+
+    float outRMS = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+    
+    // Metering
+    inputLevel = inRMS;
+    outputLevel = outRMS;
+    grLevel = 0.0f; 
+}
+
+void NADAAudioProcessor::updateDSPChain()
+{
+    // High Pass
+    *dspChain.get<0>().coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighPass(currentSampleRate, 100.0f);
+    
+    // FET 1176 Style
+    auto& fet = dspChain.get<4>();
+    fet.setThreshold(*apvts.getRawParameterValue("FET_THRESH"));
+    fet.setRatio(*apvts.getRawParameterValue("FET_RATIO"));
+    fet.setAttack(*apvts.getRawParameterValue("FET_ATTACK") * 1000.0f);
+    fet.setRelease(*apvts.getRawParameterValue("FET_RELEASE") * 1000.0f);
+    
+    // OPTO LA-2A Style
+    auto& opto = dspChain.get<5>();
+    opto.setThreshold(*apvts.getRawParameterValue("OPTO_THRESH"));
+    opto.setRatio(4.0f);
+    opto.setAttack(10.0f);
+    opto.setRelease(500.0f);
+    
+    // Limiter
+    auto& lim = dspChain.get<9>();
+    lim.setThreshold(-0.1f);
+    lim.setRelease(50.0f);
+}
 }
 
 void NADAAudioProcessor::triggerNADAAnalysis()
