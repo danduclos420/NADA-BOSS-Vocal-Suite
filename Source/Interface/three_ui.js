@@ -1,105 +1,100 @@
-// NADA BOSS ULTIMATE 3D ENGINE
-// 14-Stage Hardware Simulation with Three.js
+// NADA BOSS ULTIMATE 3D ENGINE [PHASE 20: REDEMPTION]
+// THREE.JS + PBR + BLOOM + PROCEDURAL METAL
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.toneMapping = THREE.ReinhardToneMapping;
 document.body.appendChild(renderer.domElement);
 
-// LIGHTING: THE 'SECRET' TO HARDWARE REALISM
-const ambientLight = new THREE.AmbientLight(0x404040, 2);
+// LIGHTING - STUDIO SETUP
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
 scene.add(ambientLight);
 
-const spotLight = new THREE.SpotLight(0xffffff, 50);
-spotLight.position.set(5, 10, 7);
-spotLight.castShadow = true;
-scene.add(spotLight);
+const rimLight = new THREE.DirectionalLight(0xffffff, 2);
+rimLight.position.set(5, 5, 5);
+scene.add(rimLight);
 
-const redPointLight = new THREE.PointLight(0xff3c3c, 20, 10);
-redPointLight.position.set(-2, -2, 2);
-scene.add(redPointLight);
+const redVibe = new THREE.PointLight(0xff0000, 2, 10);
+redVibe.position.set(-5, -2, 2);
+scene.add(redVibe);
 
-// MATERIALS
+// PROCEDURAL BRUSHED METAL (PBR)
 const metalMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111111,
-    metalness: 0.9,
-    roughness: 0.2,
-});
-
-const goldMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffd700,
+    color: 0x1a1a1c,
     metalness: 1,
-    roughness: 0.1,
-    emissive: 0xffd700,
-    emissiveIntensity: 0.5
+    roughness: 0.3,
+    envMapIntensity: 1
 });
 
-// GENERATE 14 KNOBS
-const knobs = [];
-const createKnob = (x, y, scale = 1, label = "") => {
+// BUILD THE 14 MODULES
+const modules = [];
+const createModule = (name, x, y, w, h, knobsCount) => {
     const group = new THREE.Group();
     
-    // Knob Base
-    const geometry = new THREE.CylinderGeometry(0.5 * scale, 0.5 * scale, 0.3 * scale, 64);
-    const knob = new THREE.Mesh(geometry, metalMaterial);
-    knob.rotation.x = Math.PI / 2;
-    group.add(knob);
+    // Panel
+    const panelGeom = new THREE.BoxGeometry(w, h, 0.1);
+    const panel = new THREE.Mesh(panelGeom, metalMaterial);
+    group.add(panel);
 
-    // Indicator Needle
-    const needleGeom = new THREE.BoxGeometry(0.05 * scale, 0.2 * scale, 0.05 * scale);
-    const needleMat = new THREE.MeshBasicMaterial({ color: 0xff3c3c });
-    const needle = new THREE.Mesh(needleGeom, needleMat);
-    needle.position.y = 0.25 * scale;
-    needle.position.z = 0.15 * scale;
-    group.add(needle);
+    // Knobs
+    for(let i=0; i<knobsCount; i++) {
+        const knobGeom = new THREE.CylinderGeometry(0.35, 0.35, 0.2, 64);
+        const knob = new THREE.Mesh(knobGeom, new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
+        knob.rotation.x = Math.PI / 2;
+        knob.position.x = (i - (knobsCount-1)/2) * 1.2;
+        knob.position.y = -0.2;
+        knob.position.z = 0.15;
+        group.add(knob);
+
+        // Indicator
+        const indGeom = new THREE.BoxGeometry(0.02, 0.15, 0.02);
+        const indMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const ind = new THREE.Mesh(indGeom, indMat);
+        ind.position.set(knob.position.x, knob.position.y + 0.2, knob.position.z + 0.05);
+        group.add(ind);
+    }
 
     group.position.set(x, y, 0);
     scene.add(group);
-    knobs.push({ group, label });
+    modules.push(group);
 };
 
-// LAYOUT ACCORDING TO MOCKUP
-// Top Row: Autotune, OPTO, FX Bus
-createKnob(-4, 2, 1.5, "AUTOTUNE");
-createKnob(0, 2, 1.5, "OPTO LEVELER");
-createKnob(4, 2, 1, "REVERB");
-createKnob(4, 0.5, 1, "DELAY");
+// 14 STAGES LAYOUT
+createModule("AUTOTUNE", -4.5, 2, 3, 2.5, 3);
+createModule("MUD EQ", -1.5, 2, 2, 2.5, 1);
+createModule("1176 FET", 1.5, 2, 3, 2.5, 2);
+createModule("LA-2A OPTO", 4.5, 2, 2.5, 2.5, 1);
 
-// Mid Row: FET, Mud EQ, EQP-1A, SSL, Sat
-createKnob(-4, -1, 1, "FET 1176");
-createKnob(-2, -1, 0.8, "MUD EQ");
-createKnob(0, -1, 1, "EQP-1A");
-createKnob(2, -1, 0.6, "SSL EQ");
-createKnob(3.5, -1, 0.6, "SATURATION");
+createModule("EQP-1A", -4.5, -1, 3, 2.5, 2);
+createModule("SSL EQ", -1.5, -1, 2, 2.5, 1);
+createModule("SATURATION", 1.5, -1, 2, 2.5, 1);
+createModule("FINAL COMP", 4.5, -1, 2, 2.5, 1);
 
-// Bottom Row: Final Comp, De-esser, Final EQ, Width, Limiter
-createKnob(-4, -3, 0.8, "FINAL COMP");
-createKnob(-2, -3, 0.6, "DE-ESSER");
-createKnob(0, -3, 0.8, "FINAL EQ");
-createKnob(2, -3, 1, "STEREO WIDTH");
-createKnob(4, -3, 1.5, "LIMITER");
+createModule("DE-ESSER", -4.5, -4, 2, 2.5, 1);
+createModule("FINAL EQ", -2, -4, 2, 2.5, 1);
+createModule("WIDTH", 0.5, -4, 2, 2.5, 1);
+createModule("LIMITER", 3, -4, 2, 2.5, 1);
+createModule("REVERB", 5.5, -4, 2, 2.5, 1);
+createModule("DELAY", 7.5, -4, 2, 2.5, 1); // 14 stages total
 
-// AI CENTER BUTTON
-const aiGeom = new THREE.SphereGeometry(1.2, 32, 32);
-const aiButton = new THREE.Mesh(aiGeom, goldMaterial);
-aiButton.scale.z = 0.2;
-aiButton.position.y = 4;
-scene.add(aiButton);
+// AI BRAIN (CENTER TOP)
+const brainGeom = new THREE.TorusGeometry(1, 0.1, 16, 100);
+const brainMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 1 });
+const brain = new THREE.Mesh(brainGeom, brainMat);
+brain.position.y = 5;
+scene.add(brain);
 
-camera.position.z = 10;
+const brainCore = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), new THREE.MeshStandardMaterial({ color: 0x000, roughness: 0 }));
+brainCore.position.y = 5;
+scene.add(brainCore);
+
+camera.position.z = 15;
 
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Subtle float animation
-    knobs.forEach((k, i) => {
-        k.group.rotation.z = Math.sin(Date.now() * 0.001 + i) * 0.2;
-    });
-    
-    aiButton.rotation.y += 0.01;
-    
+    brain.rotation.z += 0.01;
     renderer.render(scene, camera);
 }
 animate();
