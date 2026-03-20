@@ -1,4 +1,4 @@
-#include "PluginProcessor.h"
+#include "../dsp/PluginProcessor.h"
 #include "PluginEditor.h"
 
 NADALookAndFeel::NADALookAndFeel()

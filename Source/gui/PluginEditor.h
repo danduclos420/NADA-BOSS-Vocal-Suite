@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
+#include "../dsp/PluginProcessor.h"
 
 class NADALookAndFeel : public juce::LookAndFeel_V4
 {

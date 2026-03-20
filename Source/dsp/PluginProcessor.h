@@ -2,7 +2,7 @@
 #include <JuceHeader.h>
 #include <vector>
 #include <complex>
-#include "ONNXModelManager.h"
+#include "../ai/ONNXModelManager.h"
 
 // ==============================================================================
 // 1. FET COMPRESSOR (1176 Style)
