@@ -137,16 +137,18 @@ void NADAAudioProcessorEditor::timerCallback()
     juce::String meterJs = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
     webView->executeJavaScript(meterJs);
 
-    // 2. Spectrum (Simplified 32-bin telemetry)
-    juce::StringArray bins;
-    bins.add(juce::String(audioProcessor.lastAnalysis.lowEnergy));
-    bins.add(juce::String(audioProcessor.lastAnalysis.midEnergy));
-    bins.add(juce::String(audioProcessor.lastAnalysis.highEnergy));
-    
-    juce::String specJs = "if(window.updateSpectrum) updateSpectrum([" + bins.joinIntoString(",") + "]);";
+    // 2. Spectrum (Simplified telemetry)
+    juce::String specJs = juce::String::formatted("if(window.updateSpectrum) updateSpectrum([%f, %f, %f]);", 
+        audioProcessor.lastAnalysis.lowEnergy, 
+        audioProcessor.lastAnalysis.midEnergy, 
+        audioProcessor.lastAnalysis.highEnergy);
     webView->executeJavaScript(specJs);
     
-    // 3. Pitch Note
-    // (Actual logic would detect note in C++)
-    webView->executeJavaScript("document.getElementById('pitch-val').innerText = 'D#';");
+    // 3. LED Displays
+    auto speed = audioProcessor.apvts.getRawParameterValue("AUTOTUNE_SPEED")->load();
+    juce::String ledJs = juce::String::formatted("if(window.updateLedDisplay) updateLedDisplay('note', 'C#');"); // Note detection logic here
+    webView->executeJavaScript(ledJs);
+
+    // 4. Goniometer (Simplified)
+    webView->executeJavaScript("if(window.updateGoniometer) updateGoniometer([0.1, 0.2, -0.1, 0.3]);");
 }

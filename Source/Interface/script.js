@@ -73,5 +73,34 @@ function updateMeters(input, gr, output) {
     document.getElementById('needle-master').style.transform = `rotate(${(output - 0.5) * 80}deg)`;
 }
 
+function updateGoniometer(samples) {
+    ctxStereo.clearRect(0, 0, canvasStereo.width, canvasStereo.height);
+    ctxStereo.strokeStyle = 'rgba(255, 60, 60, 0.4)';
+    ctxStereo.beginPath();
+    
+    const centerX = canvasStereo.width / 2;
+    const centerY = canvasStereo.height / 2;
+    const scale = canvasStereo.width / 2.2;
+    
+    for (let i = 0; i < samples.length; i += 2) {
+        const l = samples[i];
+        const r = samples[i+1];
+        
+        const x = centerX + (l - r) * scale;
+        const y = centerY - (l + r) * scale;
+        
+        if (i === 0) ctxStereo.moveTo(x, y);
+        else ctxStereo.lineTo(x, y);
+    }
+    ctxStereo.stroke();
+}
+
+function updateLedDisplay(id, text) {
+    const el = document.getElementById('display-' + id);
+    if(el) el.innerText = text;
+}
+
 window.updateSpectrum = updateSpectrum;
 window.updateMeters = updateMeters;
+window.updateGoniometer = updateGoniometer;
+window.updateLedDisplay = updateLedDisplay;
