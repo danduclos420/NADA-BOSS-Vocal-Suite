@@ -32,7 +32,6 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     g.fillEllipse (rx, ry, rw, rw);
 
     // Pointer (Golden Precision - High Tech Glow)
-    auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
     auto pLen = radius * 0.8f;
     auto pThick = 2.5f;
     

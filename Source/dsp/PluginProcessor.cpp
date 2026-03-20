@@ -56,7 +56,7 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         buffer.clear (i, 0, buffer.getNumSamples());
 
     // --- GLOBAL BYPASS ---
-    if (audioProcessor.getActiveEditor() == nullptr || apvts.getRawParameterValue("BYPASS") != nullptr) {
+    if (getActiveEditor() == nullptr || apvts.getRawParameterValue("BYPASS") != nullptr) {
         if (auto* p = apvts.getRawParameterValue("BYPASS")) {
             if (p->load() > 0.5f) return;
         }
