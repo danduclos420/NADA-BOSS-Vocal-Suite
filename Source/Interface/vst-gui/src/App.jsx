@@ -21,168 +21,185 @@ const Knob = ({ label, initialValue = 0.5, size = 45, showValueInside = false, c
           }} 
           style={{ width: size*0.75, height: size*0.75, transform: `rotate(${val * 270 - 135}deg)` }}>
           {showValueInside ? (
-             <div className="knob-value-internal" style={{ transform: `rotate(${-val * 270 + 135}deg)`, fontSize: size/4 }}>{(val * 10).toFixed(1)}</div>
+             <div className="knob-value-internal" style={{ transform: `rotate(${-val * 270 + 135}deg)`, fontSize: size/4.5 }}>{(val * 10).toFixed(1)}</div>
           ) : (
              <div className="knob-tick" style={{ width: size*0.08, height: size*0.12, top: '2px', background: color }}></div>
           )}
         </div>
       </div>
-      <div className="label-sm" style={{marginTop:'4px', color: '#555'}}>{label}</div>
+      <div className="label-sm" style={{marginTop:'4px', color: '#444'}}>{label}</div>
     </div>
   );
 };
 
-const DualMeter = ({ left = 0.6, right = 0.5, height = 60 }) => (
-  <div style={{ display:'flex', gap:2, background:'#000', padding:2, border:'1px solid #222', borderRadius:1 }}>
-    <div className="meter-strip" style={{height, width:3}}><div className="meter-fill" style={{height:`${left*100}%`}}></div></div>
-    <div className="meter-strip" style={{height, width:3}}><div className="meter-fill" style={{height:`${right*100}%`}}></div></div>
+const DualMeter = ({ left = 0.6, right = 0.5, height = 65 }) => (
+  <div style={{ display:'flex', gap:3, background:'#000', padding:2, border:'1px solid #222', borderRadius:1 }}>
+    <div className="meter-strip" style={{height, width:4}}><div className="meter-fill" style={{height:`${left*100}%`}}></div></div>
+    <div className="meter-strip" style={{height, width:4}}><div className="meter-fill" style={{height:`${right*100}%`}}></div></div>
   </div>
 );
 
 const ProQ3View = () => (
-  <div style={{ width:'100%', height:'150px', background:'#08080a', border:'1px solid #333', borderRadius:4, position:'relative', overflow:'hidden', boxShadow:'inset 0 0 20px #000' }}>
-     <div style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', opacity:0.1, backgroundImage:'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize:'20px 20px' }}></div>
-     <svg width="100%" height="100%" style={{ position:'absolute' }}>
-        <path d="M 0 120 Q 50 100 80 40 T 150 60 T 400 120" fill="none" stroke="var(--neon-red)" strokeWidth="2" style={{ filter:'drop-shadow(0 0 5px var(--neon-red))' }} />
-        <path d="M 0 130 Q 80 110 120 90 T 250 110 T 400 130" fill="none" stroke="#2a2c32" strokeWidth="1" />
+  <div style={{ width:'100%', height:'160px', background:'#0b0c0f', border:'1px solid #333', borderRadius:4, position:'relative', overflow:'hidden', boxShadow:'inset 0 0 30px #000' }}>
+     <div style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', opacity:0.05, backgroundImage:'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize:'25px 25px' }}></div>
+     <svg width="100%" height="100%" preserveAspectRatio="none" style={{ position:'absolute' }}>
+        <path d="M 0 130 Q 80 40 150 100 T 300 30 T 450 140" fill="none" stroke="var(--neon-red)" strokeWidth="2" style={{ filter:'drop-shadow(0 0 8px var(--neon-red))' }} />
+        <path d="M 0 145 Q 100 120 200 135 T 450 145" fill="none" stroke="#2a2c32" strokeWidth="1" />
      </svg>
-     <div className="label-sm" style={{ position:'absolute', top:5, left:10, color:'#444' }}>MASTER EQ ANALYSIS (PRO-Q3)</div>
+     <div className="label-sm" style={{ position:'absolute', top:5, left:10, color:'#444' }}>01. SURGICAL SPECTRUM (PRO-Q3)</div>
   </div>
 );
 
 const PAZView = () => (
-  <div style={{ width:'100%', height:'140px', background:'#08080a', border:'1px solid #333', borderRadius:4, position:'relative', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', boxShadow:'inset 0 0 20px #000' }}>
-     <div style={{ width:'120px', height:'60px', border:'2px solid #222', borderBottom:'none', borderRadius:'60px 60px 0 0', position:'relative' }}>
-        <div style={{ position:'absolute', bottom:0, left:'50%', width:2, height:40, background:'#444', transformOrigin:'bottom', transform:'rotate(-30deg)' }}></div>
-        <div style={{ position:'absolute', bottom:0, left:'50%', width:2, height:45, background:'var(--neon-red)', transformOrigin:'bottom', transform:'rotate(10deg)', boxShadow:'var(--neon-glow)' }}></div>
+  <div style={{ width:'100%', height:'160px', background:'#0b0c0f', border:'1px solid #333', borderRadius:4, position:'relative', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', boxShadow:'inset 0 0 30px #000' }}>
+     <div style={{ width:'160px', height:'80px', border:'2px solid #222', borderBottom:'none', borderRadius:'80px 80px 0 0', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', bottom:0, left:'50%', width:1, height:70, background:'#444', transformOrigin:'bottom', transform:'rotate(-45deg)' }}></div>
+        <div style={{ position:'absolute', bottom:0, left:'50%', width:1, height:75, background:'var(--neon-red)', transformOrigin:'bottom', transform:'rotate(15deg)', boxShadow:'var(--neon-glow)' }}></div>
+        <div style={{ position:'absolute', bottom:0, left:'50%', width:1, height:65, background:'#ffd700', transformOrigin:'bottom', transform:'rotate(-20deg)', opacity:0.5 }}></div>
      </div>
-     <div style={{ display:'flex', gap:4, marginTop:10 }}>
-        {Array.from({length:15}).map((_,i) => <div key={i} style={{ width:6, height: 10 + Math.random()*30, background: i > 12 ? 'var(--neon-red)' : '#2a2c32' }}></div>)}
+     <div style={{ display:'flex', gap:5, marginTop:10, height:40, alignItems:'flex-end' }}>
+        {Array.from({length:18}).map((_,i) => <div key={i} style={{ width:7, height: 10 + Math.random()*30, background: i > 14 ? 'var(--neon-red)' : (i < 3 ? '#ffd700' : '#2a2c32') }}></div>)}
      </div>
-     <div className="label-sm" style={{ position:'absolute', bottom:5, color:'#444' }}>PAZ STEREO ANALYZER</div>
+     <div className="label-sm" style={{ position:'absolute', bottom:5, color:'#444' }}>02. PAZ ANALYZER (STEREO FIELD)</div>
   </div>
 );
 
 function App() {
   return (
     <div className="rack-chassis">
-      {/* HEADER */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:15, borderBottom:'1px solid rgba(255,255,255,0.03)' }}>
-         <div style={{ display:'flex', gap:15, alignItems:'center' }}>
-            <div style={{ width:32, height:32, background:'var(--gold)', borderRadius:'50%', display:'flex', justifyContent:'center', alignItems:'center', boxShadow:'0 0 10px var(--gold)' }}><span style={{ color:'#000', fontWeight:900, fontSize:12 }}>NB</span></div>
-            <div>
-               <div style={{ fontSize:16, fontWeight:900, letterSpacing:1 }}>NADA BOSS</div>
-               <div style={{ fontSize:8, color:'#444', letterSpacing:2 }}>ELITE ANALOG MASTER CHANNEL</div>
-            </div>
-         </div>
+      <div style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', background:'url(https://www.transparenttextures.com/patterns/black-felt.png)', opacity:0.02, pointerEvents:'none' }}></div>
+      
+      {/* HEADER SECTION (ELEGANT) */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:20 }}>
          <div style={{ display:'flex', gap:20, alignItems:'center' }}>
-            <div className="label-sm" style={{ color:'var(--gold)' }}>AI CORE ENGAGED</div>
-            <div className="ai-gold-btn" style={{ width:24, height:24 }}></div>
+            <div style={{ fontSize:28, fontWeight:900, letterSpacing:4, color:'#444' }}>NADA BOSS</div>
+            <div style={{ width:1, height:20, background:'#333' }}></div>
+            <div style={{ fontSize:10, color:'#555', letterSpacing:2 }}>PRO MASTERING SUITE // 14-STAGE</div>
+         </div>
+         <div style={{ display:'flex', gap:25, alignItems:'center' }}>
+            <div style={{ textAlign:'right' }}>
+               <div className="label-sm" style={{ color: 'var(--gold)', letterSpacing:2 }}>AI ENGINE ACTIVE</div>
+               <div style={{ fontSize:8, opacity:0.3 }}>NADA CORE v15.0</div>
+            </div>
+            <div className="ai-gold-btn" style={{ width:28, height:28 }}></div>
          </div>
       </div>
 
-      <div className="main-grid" style={{ height:'100%', gridTemplateRows:'1.5fr 1fr 1fr', gap:20 }}>
+      <div style={{ display:'grid', gridTemplateRows:'1.5fr 1fr 1fr', gap:25, height:'100%' }}>
          
-         {/* TIER 1: THE BRAIN ZONE */}
-         <div style={{ display:'grid', gridTemplateColumns:'1fr 1.5fr 1fr', gap:20 }}>
-            {/* LEFT: PITCH & DE-ESSER */}
-            <div style={{ display:'flex', flexDirection:'column', gap:15, borderRight:'1px solid rgba(255,255,255,0.03)', paddingRight:15 }}>
-               <div style={{ display:'flex', gap:15, alignItems:'center' }}>
-                  <Knob label="SPEED" size={70} initialValue={0.8} />
-                  <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                     <div style={{ background:'#000', padding:4, color:'var(--neon-red)', fontSize:10, textAlign:'center' }}>C# MIN</div>
-                     <Knob label="HUMAN" size={35} />
-                  </div>
+         {/* TIER 1: THE CORE (PRO-Q3 + DYNAMICS) */}
+         <div style={{ display:'grid', gridTemplateColumns:'1fr 1.6fr 1fr', gap:25 }}>
+            {/* LEFT: AUTOTUNE & DE-ESSER */}
+            <div style={{ display:'flex', gap:25, background:'rgba(0,0,0,0.1)', padding:15, borderRadius:4 }}>
+               <div style={{ textAlign:'center' }}>
+                  <Knob label="RE-TUNE" size={75} initialValue={0.8} />
+                  <div style={{ fontSize:10, color:'var(--neon-red)', marginTop:8 }}>C# MIN</div>
                </div>
-               <div className="separator-h"></div>
-               <div style={{ display:'flex', gap:20 }}>
-                  <Knob label="ESS" size={50} /> <DualMeter left={0.4} right={0.3} /> <Knob label="FREQ" size={40} />
+               <div className="separator-v"></div>
+               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                  <Knob label="HUMAN" size={40} />
+                  <div style={{ display:'flex', gap:10 }}>
+                     <Knob label="DE-ESS" size={40} /> <DualMeter left={0.4} />
+                  </div>
                </div>
             </div>
 
-            {/* CENTER: PRO-Q 3 VISUALIZER */}
-            <div style={{ display:'flex', flexDirection:'column' }}>
+            {/* CENTER: THE MASTER EQ (PRO-Q3) */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:15 }}>
                <ProQ3View />
-               <div style={{ display:'flex', justifyContent:'center', gap:20, marginTop:10 }}>
-                  <Knob label="VOLUME" size={100} initialValue={0.6} showValueInside={true} />
+               <div style={{ display:'flex', justifyContent:'center', gap:30 }}>
+                  <div style={{ textAlign:'center' }}>
+                     <Knob label="VOLUME" size={110} initialValue={0.6} showValueInside={true} />
+                  </div>
+                  <div style={{ alignSelf:'center' }}>
+                     <div className="label-sm">TP PEAKS</div>
+                     <DualMeter height={80} left={0.9} right={0.8} />
+                  </div>
                </div>
             </div>
 
-            {/* RIGHT: DYNAMICS UA STYLE */}
-            <div style={{ display:'flex', flexDirection:'column', gap:15, borderLeft:'1px solid rgba(255,255,255,0.03)', paddingLeft:15 }}>
-               <div style={{ display:'flex', gap:15, alignItems:'center' }}>
-                  <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                     {[4, 8, 12, 20].map(r => <div key={r} style={{ background:'#111', fontSize:8, padding:'2px 4px', border:'1px solid #333' }}>{r}</div>)}
+            {/* RIGHT: UA DYNAMICS (1176 / LA-2A) */}
+            <div style={{ display:'flex', gap:25, background:'rgba(0,0,0,0.1)', padding:15, borderRadius:4, justifyContent:'flex-end' }}>
+               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                  <div style={{ display:'flex', gap:10 }}>
+                     <Knob label="IN" size={45} /> <DualMeter left={0.5} />
                   </div>
-                  <Knob label="INPUT" size={55} />
-                  <Knob label="PEAK RED" size={80} initialValue={0.7} showValueInside={true} />
+                  <Knob label="RATIO" size={40} />
                </div>
-               <div className="separator-h"></div>
-               <div style={{ display:'flex', gap:20 }}>
-                  <Knob label="GAIN" size={50} /> <DualMeter left={0.7} right={0.6} /> <Knob label="ATTACK" size={40} />
+               <div className="separator-v"></div>
+               <div style={{ textAlign:'center' }}>
+                  <Knob label="PEAK RED" size={85} initialValue={0.7} showValueInside={true} />
+                  <Knob label="GAIN" size={45} style={{marginTop:10}} />
                </div>
             </div>
          </div>
 
-         {/* TIER 2: TONE & ANALYZER */}
-         <div style={{ display:'grid', gridTemplateColumns:'1fr 1.5fr 1fr', gap:20 }}>
-            {/* LEFT: PULTEC / SSL */}
-            <div style={{ display:'flex', gap:15, borderRight:'1px solid rgba(255,255,255,0.03)', paddingRight:15 }}>
-               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div className="label-sm">EQP-1A</div>
-                  <Knob label="LOW" size={40} /> <Knob label="HIGH" size={40} />
+         {/* TIER 2: TONE & ANALYZER (PAZ) */}
+         <div style={{ display:'grid', gridTemplateColumns:'1fr 1.6fr 1fr', gap:25 }}>
+            {/* LEFT: ANALOG STACKS (PULTEC / SSL) */}
+            <div style={{ display:'flex', gap:20, alignItems:'center' }}>
+               <div style={{ textAlign:'center' }}>
+                  <div className="label-sm" style={{marginBottom:10}}>PULTEC</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                     <Knob label="LOW" size={40} /> <Knob label="HIGH" size={40} />
+                  </div>
                </div>
                <div className="separator-v"></div>
-               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div className="label-sm">SSL-4K</div>
-                  <Knob label="LF" size={35} /> <Knob label="HF" size={35} />
+               <div style={{ textAlign:'center' }}>
+                  <div className="label-sm" style={{marginBottom:10}}>SSL 4K</div>
+                  <Knob label="DRIVE" size={45} color="var(--gold)" />
                </div>
             </div>
 
-            {/* CENTER: PAZ ANALYZER */}
+            {/* CENTER: THE MASTER ANALYZER (PAZ) */}
             <PAZView />
 
-            {/* RIGHT: BLACK BOX / SAT */}
-            <div style={{ display:'flex', gap:15, borderLeft:'1px solid rgba(255,255,255,0.03)', paddingLeft:15, justifyContent:'flex-end' }}>
-               <div style={{ display:'flex', flexDirection:'column', gap:10, alignItems:'center' }}>
-                  <div className="label-sm">HG-2 SAT</div>
-                  <div style={{ display:'flex', gap:10 }}>
-                     <Knob label="PENT" size={45} /> <Knob label="TRIO" size={45} />
-                  </div>
+            {/* RIGHT: COLOR (BLACK BOX / COMP) */}
+            <div style={{ display:'flex', gap:20, alignItems:'center', justifyContent:'flex-end' }}>
+               <div style={{ textAlign:'center' }}>
+                  <div className="label-sm" style={{marginBottom:10}}>BLACK BOX</div>
+                  <Knob label="SAT" size={50} color="#ff8800" />
                </div>
                <div className="separator-v"></div>
-               <Knob label="SAT" size={70} color="#ff8800" />
+               <div style={{ textAlign:'center' }}>
+                  <div className="label-sm" style={{marginBottom:10}}>BUS COMP</div>
+                  <div style={{ display:'flex', gap:10 }}>
+                     <Knob label="THR" size={40} /> <Knob label="RAT" size={40} />
+                  </div>
+               </div>
             </div>
          </div>
 
-         {/* TIER 3: FX & MASTERING */}
-         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:20 }}>
+         {/* TIER 3: FX & MASTERING (STEREO / LIMITER) */}
+         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:25 }}>
             {/* LEFT: SURGERY */}
-            <div style={{ display:'flex', gap:20 }}>
-               <Knob label="MUD CUT" size={50} color="#444" />
-               <div className="label-sm" style={{ alignSelf:'center' }}>RESONANCE FILTER</div>
-               <Knob label="HI-RES" size={50} color="#444" />
+            <div style={{ display:'flex', gap:25, alignItems:'center' }}>
+               <Knob label="MUD CUT" size={55} color="#333" />
+               <div style={{ borderLeft:'1px solid #333', paddingLeft:15 }}>
+                  <div className="label-sm">RESONANCE</div>
+                  <Knob label="HI" size={35} color="#333" />
+               </div>
             </div>
 
             {/* CENTER: FX BUS */}
-            <div style={{ display:'flex', gap:20, justifyContent:'center' }}>
+            <div style={{ background:'rgba(0,0,0,0.2)', borderRadius:4, padding:10, display:'flex', justifyContent:'center', gap:30 }}>
                <div style={{ textAlign:'center' }}>
-                  <Knob label="TIME" size={45} /> <span className="label-sm">H-DELAY</span>
+                  <Knob label="DLY MIX" size={45} />
                </div>
+               <div style={{ height:30, width:1, background:'#333', alignSelf:'center' }}></div>
                <div style={{ textAlign:'center' }}>
-                  <Knob label="MIX" size={45} /> <span className="label-sm">CHAMBER</span>
+                  <Knob label="REV MIX" size={45} />
                </div>
             </div>
 
-            {/* RIGHT: FINAL MASTER */}
-            <div style={{ display:'flex', gap:20, justifyContent:'flex-end', alignItems:'center' }}>
+            {/* RIGHT: THE FINISHER (LIMITER) */}
+            <div style={{ display:'flex', gap:25, alignItems:'center', justifyContent:'flex-end' }}>
                <div style={{ textAlign:'center' }}>
                   <Knob label="WIDTH" size={60} color="var(--gold)" />
                </div>
                <div className="separator-v"></div>
                <div style={{ textAlign:'center' }}>
-                  <Knob label="FOUNDATION" size={100} showValueInside={true} />
-                  <span className="label-sm">BX_LIMITER</span>
+                  <Knob label="2. FOUNDATION" size={120} initialValue={0.9} showValueInside={true} />
                </div>
             </div>
          </div>
@@ -190,9 +207,9 @@ function App() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ display:'flex', justifyContent:'space-between', opacity:0.2, marginTop:10 }}>
-         <div className="label-sm">V14.55 MASTERING CONSOLE</div>
-         <div className="label-sm">BRAINWORX & CAPITOL STUDIOS GRADE</div>
+      <div style={{ display:'flex', justifyContent:'space-between', opacity:0.1, marginTop:20, fontSize:9, letterSpacing:2 }}>
+         <span>(C) 2026 NADA BOSS // ULTIMATE RACK V14.55</span>
+         <span>BRAINWORX / CAPITOL STUDIOS / FABFILTER / UA COMPONENT SIMULATION</span>
       </div>
     </div>
   );
