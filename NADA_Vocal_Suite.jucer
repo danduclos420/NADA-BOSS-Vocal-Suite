@@ -6,25 +6,32 @@
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="mainGroup" name="NADA BOSS Vocal Suite">
     <GROUP id="{SOURCE}" name="Source">
-        <GROUP id="dsp" name="dsp">
-          <FILE id="PluginProcessorH" name="PluginProcessor.h" compile="0" resource="0" file="Source/dsp/PluginProcessor.h"/>
-          <FILE id="PluginProcessorCPP" name="PluginProcessor.cpp" compile="1" resource="0" file="Source/dsp/PluginProcessor.cpp"/>
-          <FILE id="NADAPitchShifterH" name="NADAPitchShifter.h" compile="0" resource="0" file="Source/dsp/NADAPitchShifter.h"/>
-        </GROUP>
-        <GROUP id="gui" name="gui">
-          <FILE id="PluginEditorH" name="PluginEditor.h" compile="0" resource="0" file="Source/gui/PluginEditor.h"/>
-          <FILE id="PluginEditorCPP" name="PluginEditor.cpp" compile="1" resource="0" file="Source/gui/PluginEditor.cpp"/>
-        </GROUP>
-        <GROUP id="ai" name="ai">
-          <FILE id="ONNXModelManagerH" name="ONNXModelManager.h" compile="0" resource="0" file="Source/ai/ONNXModelManager.h"/>
-        </GROUP>
+      <GROUP id="dsp" name="dsp">
+        <FILE id="PluginProcessorH" name="PluginProcessor.h" compile="0" resource="0"
+              file="Source/dsp/PluginProcessor.h"/>
+        <FILE id="PluginProcessorCPP" name="PluginProcessor.cpp" compile="1"
+              resource="0" file="Source/dsp/PluginProcessor.cpp"/>
+        <FILE id="NADAPitchShifterH" name="NADAPitchShifter.h" compile="0"
+              resource="0" file="Source/dsp/NADAPitchShifter.h"/>
+      </GROUP>
+      <GROUP id="gui" name="gui">
+        <FILE id="PluginEditorH" name="PluginEditor.h" compile="0" resource="0"
+              file="Source/gui/PluginEditor.h"/>
+        <FILE id="PluginEditorCPP" name="PluginEditor.cpp" compile="1" resource="0"
+              file="Source/gui/PluginEditor.cpp"/>
+      </GROUP>
+      <GROUP id="ai" name="ai">
+        <FILE id="ONNXModelManagerH" name="ONNXModelManager.h" compile="0"
+              resource="0" file="Source/ai/ONNXModelManager.h"/>
+      </GROUP>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="NADA BOSS Vocal Suite" preprocessorDefinitions="JUCE_USE_WIN_WEBVIEW2=1"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="NADA BOSS Vocal Suite" preprocessorDefinitions="JUCE_USE_WIN_WEBVIEW2=1"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="NADA BOSS Vocal Suite"
+                       preprocessorDefinitions="JUCE_USE_WIN_WEBVIEW2=1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path=""/>
@@ -39,6 +46,7 @@
         <MODULEPATH id="juce_gui_basics" path=""/>
         <MODULEPATH id="juce_gui_extra" path=""/>
         <MODULEPATH id="juce_dsp" path=""/>
+        <MODULEPATH id="juce_audio_processors_headless" path="E:/telechargement/juce-8.0.12-windows/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
   </EXPORTFORMATS>
@@ -47,13 +55,17 @@
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1" JUCE_WEB_BROWSER="1" JUCE_USE_WIN_WEBVIEW2="1" JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING="1"/>
-    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"
+            JUCE_WEB_BROWSER="1" JUCE_USE_WIN_WEBVIEW2="1" JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING="1"/>
   </MODULES>
+  <JUCEOPTIONS/>
 </JUCERPROJECT>
