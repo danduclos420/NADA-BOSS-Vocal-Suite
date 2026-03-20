@@ -29,9 +29,16 @@ public:
 
 private:
     NADAAudioProcessor& audioProcessor;
+    NADALookAndFeel lnf;
 
-    // --- WEB UI BRIDGE ---
-    std::unique_ptr<juce::WebBrowserComponent> webView;
+    // --- NATIVE UI COMPONENTS ---
+    juce::Slider masterGainKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterGainAttachment;
+
+    juce::TextButton aiAnalyzeButton;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> aiAnalyzeAttachment;
+
+    juce::Label statusLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NADAAudioProcessorEditor)
 };

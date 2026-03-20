@@ -17,26 +17,90 @@ body {
 .rack-chassis {
   width: 1600px; height: 900px;
   background: var(--bg-gradient);
-  padding: 40px; box-sizing: border-box;
+  background-image: 
+    radial-gradient(circle at 50% 10%, rgba(255,255,255,0.02) 0%, transparent 60%),
+    linear-gradient(rgba(255,255,255,0.01) 2px, transparent 2px), 
+    var(--bg-gradient);
+  background-size: 100% 100%, 100% 4px, 100% 100%;
+  padding: 20px; box-sizing: border-box; /* Reduced padding to use surface */
   position: relative;
-  display: flex; flex-direction: column; gap: 40px;
-  box-shadow: inset 0 0 150px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column; gap: 20px;
+  box-shadow: inset 0 0 300px rgba(0,0,0,1);
+  z-index: 5;
+  overflow: hidden;
+}
+
+/* Layered Depth for Sections - GENUINE LOOK */
+.section-zone {
+  background: #111215 !important;
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+  border-left: 1px solid rgba(255,255,255,0.03) !important;
+  border-right: 1px solid rgba(0,0,0,0.5) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.8) !important;
+  box-shadow: 
+    12px 12px 24px rgba(0,0,0,0.8), 
+    -1px -1px 2px rgba(255,255,255,0.01),
+    inset 0 0 20px rgba(0,0,0,0.5) !important;
+  border-radius: 4px !important;
+}
+
+/* Metallic Grain with Reflection */
+.metallic-grain {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 0;
 }
 
 /* SUBTLE SEPARATORS */
 .separator-v { width: 1px; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.05), transparent); }
 .separator-h { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent); width: 100%; }
 
-/* GRID LAYOUT */
-.main-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; height: 100%; }
+/* GRID LAYOUT - GENUINE 1560px SYMMETRY */
+.main-grid { 
+  display: grid; 
+  grid-template-columns: 270px 270px 400px 270px 270px; 
+  gap: 20px; 
+  height: 100%; 
+  padding: 0 20px;
+  justify-content: center;
+}
+
+/* RECESSED (SUNKEN) HARDWARE PANELS */
+.section-zone {
+  background: #0d0e11 !important;
+  border: 1px solid #000 !important;
+  box-shadow: 
+    inset 2px 2px 10px rgba(0,0,0,0.9), 
+    1px 1px 1px rgba(255,255,255,0.02) !important;
+  border-radius: 4px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Corner Screw Detail */
+.section-zone::before, .section-zone::after {
+  content: ""; position: absolute; width: 6px; height: 6px;
+  background: radial-gradient(circle at 30% 30%, #444 0%, #000 100%);
+  border-radius: 50%; opacity: 0.5; z-index: 2;
+}
+.section-zone::before { top: 6px; left: 6px; box-shadow: 252px 0 0 rgba(0,0,0,0.8); } /* 270 - 18 */
+.section-zone::after { bottom: 6px; left: 6px; box-shadow: 252px 0 0 rgba(0,0,0,0.8); }
 
 /* KNOB 2.0 - BX STYLE WITH INDENTATIONS */
 .knob-unit { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
 
 .knob-bezel {
-  background: #111; border-radius: 50%;
+  background: #08080a !important;
+  border-radius: 50%;
   display: flex; justify-content: center; align-items: center;
-  box-shadow: inset 1px 1px 3px #000, 1px 1px 1px rgba(255,255,255,0.03);
+  /* THE "CUVRÉ" (INDENTED) EFFECT */
+  box-shadow: 
+    inset 4px 4px 8px rgba(0,0,0,0.8), 
+    inset -2px -2px 4px rgba(255,255,255,0.05),
+    1px 1px 2px rgba(255,255,255,0.05) !important;
   position: relative;
 }
 
@@ -58,9 +122,13 @@ body {
 }
 
 .knob-body {
-  background: radial-gradient(circle at 35% 35%, #2a2c32, #08080a);
+  background: radial-gradient(circle at 35% 35%, #3a3d45, #0a0a0c) !important;
   border-radius: 50%;
-  box-shadow: 2px 5px 10px rgba(0,0,0,0.8), inset 0 0 1px rgba(255,255,255,0.05);
+  /* SATIN 3D POP WITH RIM HIGHLIGHT */
+  box-shadow: 
+    4px 8px 16px rgba(0,0,0,0.95), 
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    inset -1px -1px 2px rgba(0,0,0,0.5) !important;
   cursor: ns-resize; position: relative;
   display: flex; justify-content: center; align-items: center;
 }
@@ -70,9 +138,13 @@ body {
 }
 
 .knob-tick {
-  position: absolute; background: var(--neon-red);
-  border-radius: 50%; top: 4px; left: 50%; transform: translateX(-50%);
-  box-shadow: 0 0 5px var(--neon-red);
+  position: absolute; 
+  background: linear-gradient(to bottom, #fff, var(--neon-red)) !important; /* White core */
+  border-radius: 2px; top: 3px; left: 50%; transform: translateX(-50%);
+  width: 3px !important; height: 8px !important;
+  /* INTENSE NEON GLOW */
+  box-shadow: 0 0 15px 3px var(--neon-red), 0 0 5px #fff !important;
+  filter: brightness(1.8);
 }
 
 /* CENTER BRIDGE METERS */
@@ -122,5 +194,9 @@ body {
 }
 
 /* TEXT */
-.label-sm { font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
-.value-sm { font-size: 10px; font-weight: 500; color: var(--text-active); margin-top: 2px; }
+.label-sm { 
+  font-size: 9px; font-weight: 900; color: #444 !important; 
+  text-transform: uppercase; letter-spacing: 1.5px; 
+  text-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 -1px 0 rgba(0,0,0,0.5); /* ETCHED LOOK */
+}
+.value-sm { font-size: 10px; font-weight: 700; color: var(--text-active); margin-top: 2px; font-family: 'Courier New', monospace; text-shadow: 0 0 5px var(--neon-red); }

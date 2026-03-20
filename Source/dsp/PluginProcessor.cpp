@@ -70,7 +70,9 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 
     // 1. Pitch (Crispytuner)
     float pitchRatio = std::pow(2.0f, userPitch / 12.0f);
-    pitchShifter.process(buffer, pitchRatio);
+    // Use human/amount to modulate the target pitch if needed (simulated)
+    float tunerAmt = apvts.getRawParameterValue("AUTOTUNE_AMOUNT")->load();
+    pitchShifter.process(buffer, 1.0f + (pitchRatio - 1.0f) * tunerAmt);
 
     // Block-based Processing
     juce::dsp::AudioBlock<float> block(buffer);
@@ -141,10 +143,22 @@ void NADAAudioProcessor::updateDSPChain()
     // 2. Pro-Q 3 (6 Bands)
     for (int i=0; i<6; ++i) {
         juce::String prefix = "EQ_BAND_" + juce::String(i+1) + "_";
+        bool active = apvts.getRawParameterValue(prefix + "ACTIVE")->load() > 0.5f;
+        if (!active) {
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeAllPass(mSampleRate, 1000.0f);
+            continue;
+        }
         float f = apvts.getRawParameterValue(prefix + "FREQ")->load();
         float g = apvts.getRawParameterValue(prefix + "GAIN")->load();
         float q = apvts.getRawParameterValue(prefix + "Q")->load();
-        *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g));
+        int type = (int)apvts.getRawParameterValue(prefix + "TYPE")->load();
+        
+        if (type == 0) // Low Cut
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighPass(mSampleRate, f, q);
+        else if (type == 1) // Bell
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g));
+        else // High Cut
+            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(mSampleRate, f, q);
     }
 
     // 3. 1176 Coefficients
@@ -218,6 +232,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
     // 1. AUTOTUNE
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_SPEED", "Speed", 0.0f, 1.0f, 0.2f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_PITCH", "Pitch", -12.0f, 12.0f, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_HUMAN", "Human", 0.0f, 1.0f, 0.5f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("AUTOTUNE_AMOUNT", "Amount", 0.0f, 1.0f, 1.0f));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_KEY", "Key", juce::StringArray{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}, 1));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("AUTOTUNE_SCALE", "Scale", juce::StringArray{"Maj", "Min"}, 1));
 
     // 2. Pro-Q 3 (6 Bands)
     for (int i=1; i<=6; ++i) {
@@ -225,6 +243,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
         params.push_back(std::make_unique<juce::AudioParameterFloat>(s + "_FREQ", s + " Freq", 20.0f, 20000.0f, 1000.0f * i));
         params.push_back(std::make_unique<juce::AudioParameterFloat>(s + "_GAIN", s + " Gain", -18.0f, 18.0f, 0.0f));
         params.push_back(std::make_unique<juce::AudioParameterFloat>(s + "_Q", s + " Q", 0.1f, 10.0f, 1.0f));
+        params.push_back(std::make_unique<juce::AudioParameterBool>(s + "_ACTIVE", s + " Active", true));
+        params.push_back(std::make_unique<juce::AudioParameterChoice>(s + "_TYPE", s + " Type", juce::StringArray{"Low Cut", "Bell", "High Cut"}, (i==1?0:(i==6?2:1))));
     }
 
     // 3. 1176
