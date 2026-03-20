@@ -4,6 +4,7 @@
 #include <onnxruntime_cxx_api.h>
 #include <vector>
 #include <memory>
+#pragma comment(lib, "onnxruntime.lib")
 
 class ONNXModelManager
 {
@@ -26,8 +27,6 @@ public:
     std::vector<float> runInference(const std::vector<float>& inputData)
     {
         juce::ignoreUnused (inputData);
-        // Simple 1D float vector inference stub
-        // In a real scenario, we'd map this to a specific model output
         return { 0.5f, 0.7f }; 
     }
 

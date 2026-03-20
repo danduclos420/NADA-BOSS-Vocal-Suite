@@ -50,7 +50,7 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     // --- 1. CAPTURE DATA FOR AI ---
     auto* inL = buffer.getReadPointer(0);
     for (int i=0; i<buffer.getNumSamples(); ++i) {
-        analysisBuffer[analysisBufferPos] = inL[i];
+        analysisBuffer[(size_t)analysisBufferPos] = inL[i];
         analysisBufferPos = (analysisBufferPos + 1) % (int)analysisBuffer.size();
     }
     inputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
