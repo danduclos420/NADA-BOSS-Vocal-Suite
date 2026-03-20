@@ -1,7 +1,8 @@
 :root {
     --neon-red: #ff3c3c;
-    --red-glow: 0 0 20px rgba(255, 60, 60, 0.8);
+    --red-glow: 0 0 25px rgba(255, 60, 60, 0.9);
     --gold: #ffd700;
+    --gold-glow: 0 0 40px rgba(255, 215, 0, 0.8);
 }
 
 body {
@@ -12,107 +13,114 @@ body {
     align-items: center;
     font-family: 'Inter', sans-serif;
     color: #fff;
-    padding: 20px;
+    min-height: 100vh;
 }
 
-.rack-frame {
-    width: 1200px;
+.rack-chassis {
+    width: 1250px;
     background-image: url('industrial_rack_bg_1773970578395.png');
     background-size: cover;
-    border: 3px solid #111;
-    border-radius: 10px;
-    padding: 25px;
-    box-shadow: 0 50px 100px rgba(0,0,0,1);
+    border: 4px solid #000;
+    border-radius: 4px;
+    padding: 0 60px; /* Space for ears */
     position: relative;
-}
-
-/* AI MASTER CORE */
-.ai-header {
+    box-shadow: 0 100px 200px rgba(0,0,0,1);
     display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-}
-.ai-button-master {
-    width: 160px;
-    height: 160px;
-    background-image: url('gold_ai_button_master_1773970622270.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6));
-    animation: glow-pulse 2s infinite alternate;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 40px;
 }
 
-@keyframes glow-pulse {
-    from { transform: scale(0.98); opacity: 0.8; }
-    to { transform: scale(1.02); opacity: 1; }
-}
-
-/* GRID SYSTEM */
-.giga-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-}
-
-.mod-unit {
-    background: rgba(0,0,0,0.6);
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 15px;
-    position: relative;
-    box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
-}
-
-.mod-unit h3 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 14px;
-    color: #666;
-    margin: 0 0 15px 0;
-    letter-spacing: 2px;
-}
-
-/* KNOBS & CONTROLS */
-.knob-pro {
-    width: 65px;
-    height: 65px;
-    background-image: url('knurled_knob_v2_1773970602658.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    margin: 0 auto 5px;
-    transition: transform 0.1s linear;
-}
-.knob-pro.large { width: 90px; height: 90px; }
-.knob-pro.mini { width: 45px; height: 45px; }
-
-.label-bebas {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 10px;
-    color: #555;
-    text-align: center;
-    display: block;
-}
-
-/* METERS */
-.led-meter-seg {
-    width: 10px;
-    height: 80px;
-    background: #050505;
-    border: 1px solid #222;
-    position: relative;
-}
-.segment-fill {
+/* RACK EARS */
+.rack-ear {
     position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: linear-gradient(to top, #800, #f00);
-    box-shadow: 0 0 10px rgba(255,0,0,0.5);
+    top: 0; bottom: 0;
+    width: 60px;
+    background: linear-gradient(to right, #222, #111);
+    display: flex; flex-direction: column; justify-content: space-around; align-items: center;
+}
+.rack-ear.left { left: 0; border-right: 2px solid #000; }
+.rack-ear.right { right: 0; border-left: 2px solid #000; }
+.rack-hole { width: 24px; height: 24px; background: radial-gradient(circle, #333, #000); border-radius: 50%; border: 2px solid #111; box-shadow: inset 1px 1px 3px rgba(255,255,255,0.1); }
+
+/* AI CENTERPIECE ELITE */
+.ai-core-unit {
+    display: flex; justify-content: center; padding: 40px 0;
+}
+.ai-halo-button {
+    width: 200px; height: 200px;
+    background-image: url('gold_ai_button_master_1773970622270.png');
+    background-size: contain; background-repeat: no-repeat;
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
+    animation: pulsar 1.5s infinite alternate;
+    cursor: pointer;
+}
+@keyframes pulsar {
+    from { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3)); transform: scale(0.97); }
+    to { filter: drop-shadow(0 0 60px rgba(255, 215, 0, 0.8)); transform: scale(1.03); }
 }
 
-/* TEXT */
-.brand { position: absolute; top: 20px; left: 30px; }
-.brand h1 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; margin: 0; }
-.vst-spec { position: absolute; top: 20px; right: 30px; text-align: right; }
-.vst-spec h1 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; margin: 0; }
+/* MODULES GRID */
+.rack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
 
-.active-led { width: 8px; height: 8px; background: #300; border-radius: 50%; margin: 5px auto; }
-.active-led.on { background: var(--neon-red); box-shadow: var(--red-glow); }
+.module-rack-unit {
+    background: rgba(0,0,0,0.7);
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+    border-top: 2px solid #444;
+}
+
+.module-rack-unit::before {
+    content: ''; position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: #222; border-radius: 50%;
+}
+
+.unit-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; color: #555;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+/* KNOBS ELITE */
+.knob-master {
+    width: 80px; height: 80px;
+    background-image: url('knurled_knob_v2_1773970602658.png');
+    background-size: contain; background-repeat: no-repeat;
+    margin: 0 auto 10px;
+    filter: drop-shadow(0 5px 15px #000);
+}
+.knob-master.xl { width: 130px; height: 130px; }
+.knob-master.sm { width: 50px; height: 50px; }
+
+.knob-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px; color: #888; text-align: center; display: block;
+    letter-spacing: 1px;
+}
+
+/* METERS ELITE */
+.v-meter-rack {
+    width: 14px; height: 100px; background: #000; border: 1px solid #222; position: relative;
+}
+.v-meter-fill {
+    position: absolute; bottom: 0; width: 100%;
+    background: linear-gradient(to top, #900 0%, #f00 80%, #ff0 100%);
+    box-shadow: 0 0 15px rgba(255,0,0,0.6);
+}
+
+/* TYPO */
+.bebas { font-family: 'Bebas Neue', sans-serif; }
+.brand-text { position: absolute; top: 30px; left: 80px; }
+.brand-text h1 { margin:0; font-size:40px; letter-spacing:-1px; }
+.brand-text h2 { margin:0; font-size:18px; color:#444; }
+
+.vst-text { position: absolute; top: 30px; right: 80px; text-align:right; }
+.vst-text h1 { margin:0; font-size:40px; }
+.vst-text h2 { margin:0; font-size:18px; color:var(--neon-red); }
