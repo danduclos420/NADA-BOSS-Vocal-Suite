@@ -134,8 +134,21 @@ function App() {
             <span style={{ fontSize:8, color:'#333', letterSpacing:1 }}>V16.2 PRECISION FRAME</span>
          </div>
          <div style={{ display:'flex', alignItems:'center', gap:15 }}>
-            <span style={{ fontSize:8, color:'var(--gold)', letterSpacing:2, opacity:0.6 }}>AI CORE ENGAGED</span>
-            <div style={{ width:16, height:16, borderRadius:'50%', background:'var(--gold)', border:'2px solid #000', boxShadow:'0 0 10px var(--gold)' }}></div>
+            <button 
+               onClick={() => {
+                  console.log("AI ANALYZE TRIGGERED");
+                  if (window.juce) window.juce.triggerNADAAnalysis();
+               }}
+               style={{ 
+                  background: 'none', border: '1px solid var(--gold)', borderRadius: 2, 
+                  color: 'var(--gold)', fontSize: 8, padding: '4px 10px', cursor: 'pointer',
+                  letterSpacing: 1, textShadow: '0 0 5px var(--gold)', 
+                  display:'flex', alignItems:'center', gap:8
+               }}>
+               <div style={{ width:8, height:8, borderRadius:'50%', background:'var(--gold)', border:'1px solid #000', boxShadow:'0 0 5px var(--gold)' }}></div>
+               AI ANALYZE
+            </button>
+            <span style={{ fontSize:8, color:'#444', letterSpacing:1 }}>STATUS: <span style={{color:'var(--gold)'}}>READY</span></span>
          </div>
       </div>
 
