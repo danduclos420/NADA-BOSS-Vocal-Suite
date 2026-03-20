@@ -96,8 +96,8 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         r = optoLA2A.process(r, optoRed);
 
         // 7. HG-2
-        l = hg2.process(l, satDrv, 0.1f, 0.1f);
-        r = hg2.process(r, satDrv, 0.1f, 0.1f);
+        l = hg2.process(l, satDrv, 0.12f, 0.08f);
+        r = hg2.process(r, satDrv, 0.12f, 0.08f);
 
         // 8. R-Vox
         l = rvox.process(l, rvoxComp, 0.001f);
@@ -126,11 +126,16 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     reverb.process(context);
 
     // 13. Delay
-    // Simplified sample-wise delay loop for H-Delay
+    float dMix = apvts.getRawParameterValue("DELAY_MIX")->load();
     for (int s = 0; s < buffer.getNumSamples(); ++s) {
         float delL = delay.lineL.popSample(0);
-        delay.lineL.pushSample(0, left[s] + delL * 0.3f);
-        left[s] = left[s] * 0.8f + delL * 0.2f;
+        float delR = delay.lineR.popSample(0);
+        
+        delay.lineL.pushSample(0, left[s] + delL * 0.25f);
+        delay.lineR.pushSample(0, right[s] + delR * 0.25f);
+        
+        left[s] = left[s] * (1.0f - dMix*0.5f) + delL * dMix;
+        right[s] = right[s] * (1.0f - dMix*0.5f) + delR * dMix;
     }
 
     outputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
@@ -201,6 +206,9 @@ void NADAAudioProcessor::runSpectralAnalysis()
     // ... logic to fill spectrum ...
 
     // AI HEURISTICS (Sound Matching)
+    // Only run if we have significant input to avoid noise-floor tracking
+    if (inputLevel.load() < 0.01f) return;
+
     // Targeting "US VOCAL" Profile: Bright, controlled low-mids, flat but present 2k-5k.
     
     // Example: If low energy is > target, reduce EQ Band 2 (Mud)

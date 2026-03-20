@@ -87,23 +87,49 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
 {
     setLookAndFeel(&lnf);
 
-    // 1. Master Gain
-    masterGainKnob.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    masterGainKnob.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    addAndMakeVisible(masterGainKnob);
-    masterGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.apvts, "LIMITER_THRESH", masterGainKnob);
+    // --- 1. SETUP WEB VIEW ---
+    auto options = juce::WebBrowserComponent::Options{}
+        .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
+        .withResourceProvider([this](const juce::String& url) -> std::optional<juce::WebBrowserComponent::Resource> {
+            auto resourcePath = url.fromFirstOccurrenceOf(juce::WebBrowserComponent::getResourceProviderRoot(), false, true);
 
-    // 2. AI Button
-    aiAnalyzeButton.setButtonText("AI ANALYZE");
-    aiAnalyzeButton.setName("NADA AI");
-    addAndMakeVisible(aiAnalyzeButton);
-    // Note: AI Trigger is currently a processor call, we might need a custom callback or use a parameter if available
-    aiAnalyzeButton.onClick = [this] { audioProcessor.triggerNADAAnalysis(); };
+            if (resourcePath.isEmpty() || resourcePath == "/")
+                resourcePath = "index.html";
 
-    // 3. Status
-    statusLabel.setText("AI READY", juce::dontSendNotification);
-    statusLabel.setColour(juce::Label::textColourId, juce::Colour(0xffd4af37));
-    addAndMakeVisible(statusLabel);
+            juce::File executable = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
+            juce::File resourceFile = executable.getSiblingFile("Resources").getChildFile(resourcePath);
+
+            if (!resourceFile.existsAsFile())
+                resourceFile = executable.getParentDirectory().getSiblingFile("Resources").getChildFile(resourcePath);
+
+            if (resourceFile.existsAsFile())
+            {
+                juce::MemoryBlock mb;
+                if (resourceFile.loadFileAsData(mb))
+                {
+                    std::vector<std::byte> data(mb.getSize());
+                    std::memcpy(data.data(), mb.getData(), mb.getSize());
+                    return juce::WebBrowserComponent::Resource{ std::move(data), resourceFile.getFileExtension().replace(".", "") };
+                }
+            }
+
+            return std::nullopt;
+        })
+        .withNativeIntegrationEnabled(true)
+        .withNativeFunction ("setParam", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+            if (auto* param = audioProcessor.apvts.getParameter(args[0].toString()))
+                param->setValueNotifyingHost((float)args[1]);
+            completion (juce::var());
+        })
+        .withNativeFunction ("triggerAnalysis", [this] (const juce::var& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+            juce::ignoreUnused(args);
+            audioProcessor.triggerNADAAnalysis();
+            completion (juce::var());
+        });
+
+    webView = std::make_unique<juce::WebBrowserComponent>(options);
+    addAndMakeVisible (*webView);
+    webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
     startTimerHz(30);
     setSize (1600, 900); 
@@ -115,48 +141,43 @@ NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
 
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // --- 1. DARK INDUSTRIAL BACKGROUND ---
+    // --- DARK RACK BACKGROUND (Loading / Fallback) ---
     g.fillAll (juce::Colour (0xff0b0c0f));
-    
-    // --- 2. RACK CHASSIS GRADIENT ---
-    juce::ColourGradient chassis (juce::Colour (0xff242629), 0, 0, juce::Colour (0xff16181a), 0, (float)getHeight(), false);
-    g.setGradientFill (chassis);
     auto rackArea = getLocalBounds().toFloat().reduced(16);
+    g.setColour (juce::Colour (0xff1c1e21));
     g.fillRoundedRectangle (rackArea, 8.0f);
-
-    // --- 3. LOGO & STATUS PANEL (AI READY) ---
-    g.setColour (juce::Colours::white.withAlpha (0.1f));
-    g.setFont (juce::Font ("Inter", 12.0f, juce::Font::bold));
     
-    auto headerArea = getLocalBounds().removeFromTop (60).reduced (20, 10);
-    g.drawText ("NADA BOSS // ELITE CHANNEL STRIP", headerArea, juce::Justification::centredLeft);
-    
-    g.setColour (juce::Colour (0xffd4af37)); // Gold
-    g.drawText ("AI STATUS: READY", headerArea, juce::Justification::centredRight);
-    
-    // --- 4. CENTER DASHBOARD PLACEHOLDER ---
-    // If we had native components, they would be added here.
-    // For now, we draw a subtle grid to maintain the aesthetic.
-    g.setColour (juce::Colours::white.withAlpha (0.02f));
-    for (int i=1; i<5; ++i)
-        g.drawVerticalLine (i * getWidth() / 5, 60, (float)getHeight() - 40);
+    // Branding
+    g.setColour (juce::Colours::white.withAlpha (0.05f));
+    g.setFont (juce::Font ("Inter", 24.0f, juce::Font::bold));
+    g.drawText ("NADA BOSS // LOADING...", getLocalBounds(), juce::Justification::centred);
 }
 
 void NADAAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced(40);
-    auto header = area.removeFromTop(60);
-    
-    aiAnalyzeButton.setBounds(header.removeFromRight(120).reduced(0, 15));
-    statusLabel.setBounds(header.removeFromRight(150));
-    
-    // Position Master Gain in the center hub
-    masterGainKnob.setBounds(getLocalBounds().getCentreX() - 80, getLocalBounds().getCentreY() - 80, 160, 160);
+    if (webView != nullptr)
+        webView->setBounds(getLocalBounds());
 }
 
 void NADAAudioProcessorEditor::timerCallback()
 {
-    // The previous webView->evaluateJavascript calls are removed.
-    // Native VU meters and spectrum data would be updated here for the JUCE UI.
+    if (webView != nullptr)
+    {
+        // 1. Meters
+        auto input = audioProcessor.inputLevel.load();
+        auto gr = audioProcessor.grLevel.load();
+        auto output = audioProcessor.outputLevel.load();
+        
+        juce::String meterJs = juce::String::formatted("if(window.updateMeters) updateMeters(%f, %f, %f);", input, gr, output);
+        webView->evaluateJavascript(meterJs);
+
+        // 2. Spectrum (Simplified telemetry)
+        juce::String specJs = juce::String::formatted("if(window.updateSpectrum) updateSpectrum([%f, %f, %f]);", 
+            audioProcessor.lastAnalysis.lowEnergy, 
+            audioProcessor.lastAnalysis.midEnergy, 
+            audioProcessor.lastAnalysis.highEnergy);
+        webView->evaluateJavascript(specJs);
+    }
+    
     repaint();
 }

@@ -31,7 +31,10 @@ private:
     NADAAudioProcessor& audioProcessor;
     NADALookAndFeel lnf;
 
-    // --- NATIVE UI COMPONENTS ---
+    // --- WEB UI BRIDGE ---
+    std::unique_ptr<juce::WebBrowserComponent> webView;
+
+    // --- NATIVE UI COMPONENTS (BACKUP) ---
     juce::Slider masterGainKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterGainAttachment;
 

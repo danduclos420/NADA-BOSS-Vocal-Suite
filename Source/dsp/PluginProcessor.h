@@ -121,15 +121,16 @@ class HG2Saturator {
 public:
     void prepare(double sr) { sampleRate = sr; }
     float process(float in, float saturation, float pentode, float triode) {
-        // Pre-clamping input to prevent extreme tanh instability
-        float x = in * (1.0f + saturation * 2.0f);
-        // Pentode (Odd harmonics - tanh is already efficient in some libs, but let's keep it)
+        float x = in * (1.0f + saturation * 1.5f);
+        
+        // Pentode (Odd harmonics - smooth compression)
         float p = std::tanh(x * (1.0f + pentode));
-        // Triode (Even harmonics - simple quadratic saturation)
-        float triodeOffset = triode * 0.1f;
-        float t = (x + triodeOffset);
-        t = (t * t) * (t > 0 ? 1.0f : -1.0f); // Quick non-linear response
-        return (p * 0.6f + t * 0.4f) * 0.8f;
+        
+        // Triode (Even harmonics - asymmetric tanh)
+        float triodeDrive = x * (1.0f + triode);
+        float t = std::tanh(triodeDrive + 0.2f) - std::tanh(0.2f); // Asymmetric bias
+        
+        return (p * 0.7f + t * 0.3f) * 0.9f;
     }
 private:
     double sampleRate;

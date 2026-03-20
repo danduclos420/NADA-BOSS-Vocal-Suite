@@ -23,7 +23,7 @@ juce_add_plugin(NADA_BOSS_VOCAL_SUITE
     PLUGIN_CODE "NADA"
     FORMATS VST3
     PRODUCT_NAME "NADA BOSS Vocal Suite"
-    NEEDS_WEBVIEW2 FALSE
+    NEEDS_WEBVIEW2 TRUE
 )
 
 # 3. Generate JuceHeader.h
@@ -48,8 +48,8 @@ target_include_directories(NADA_BOSS_VOCAL_SUITE PRIVATE
 # 5. Dependencies
 target_compile_definitions(NADA_BOSS_VOCAL_SUITE
     PUBLIC
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_WIN_WEBVIEW2=0
+    JUCE_WEB_BROWSER=1
+    JUCE_USE_WIN_WEBVIEW2=1
     JUCE_USE_CURL=1
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
