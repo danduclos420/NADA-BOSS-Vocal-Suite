@@ -1,15 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const Knob = ({ label, size = 'standard', initialValue = 0.5, suffix = "", active = false }) => {
+const Knob = ({ label, initialValue = 0.5, size = 60, unit = "" }) => {
   const [value, setValue] = useState(initialValue);
-  const sizePx = size === 'big' ? 100 : (size === 'small' ? 42 : 70);
-  
-  const handleMouseDown = (e) => {
+  const circumference = 2 * Math.PI * 28;
+  const offset = circumference - (value * 0.75 * circumference);
+
+  const handleDrag = (e) => {
     const startY = e.clientY;
-    const startValue = value;
-    const move = (moveEvent) => {
-      const delta = (startY - moveEvent.clientY) / 200;
-      setValue(Math.min(1, Math.max(0, startValue + delta)));
+    const startVal = value;
+    const move = (me) => {
+      const d = (startY - me.clientY) / 200;
+      setValue(Math.min(1, Math.max(0, startVal + d)));
     };
     const up = () => {
       document.removeEventListener('mousemove', move);
@@ -19,183 +20,122 @@ const Knob = ({ label, size = 'standard', initialValue = 0.5, suffix = "", activ
     document.addEventListener('mouseup', up);
   };
 
-  // SVG Red Ring Calculation
-  const radius = sizePx / 2 - 4;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value * 0.75) * circumference;
-
   return (
-    <div className="knob-container" style={{ width: sizePx, height: sizePx + 40 }}>
-      {/* Red Glow Ring */}
-      <svg className="knob-ring-svg" width={sizePx} height={sizePx}>
-        <circle 
-          cx={sizePx/2} cy={sizePx/2} r={radius}
-          fill="none" stroke="#222" strokeWidth="4"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * 0.25}
-          transform={`rotate(135 ${sizePx/2} ${sizePx/2})`}
-        />
-        <circle 
-          cx={sizePx/2} cy={sizePx/2} r={radius}
-          fill="none" stroke="var(--neon-red)" strokeWidth="4"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference - (value * 0.75 * circumference)}
-          strokeLinecap="round"
-          transform={`rotate(135 ${sizePx/2} ${sizePx/2})`}
-          style={{ filter: 'drop-shadow(0 0 5px var(--neon-red))' }}
-        />
-      </svg>
-      
-      <div onMouseDown={handleMouseDown} className={`knob-outer ${size}`}>
-        <div className="knob-indicator" style={{ transform: `rotate(${value * 270 - 135}deg) translateX(-50%)`, transformOrigin: 'bottom center' }}></div>
+    <div className="knob-unit">
+      <div className="knob-bezel" style={{ width: size, height: size }}>
+        <svg className="glow-ring" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="28" fill="none" stroke="#000" strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={circumference * 0.25} transform="rotate(135 40 40)" />
+          <circle cx="40" cy="40" r="28" fill="none" stroke="var(--neon-red)" strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" transform="rotate(135 40 40)" style={{ filter: 'drop-shadow(0 0 3px var(--neon-red))', opacity: 0.8 }} />
+        </svg>
+        <div className="knob-body" onMouseDown={handleDrag} style={{ transform: `rotate(${value * 270 - 135}deg)` }}>
+          <div className="knob-tick"></div>
+        </div>
       </div>
-      <div style={{ textAlign: 'center', marginTop: '10px' }}>
-        <div className="label-param">{label}</div>
-        <div className="label-value">{(value * 100).toFixed(0)}{suffix}</div>
+      <div style={{ textAlign: 'center' }}>
+        <div className="label-sm">{label}</div>
+        <div className="value-sm">{(value * 100).toFixed(0)}{unit}</div>
       </div>
     </div>
   );
 };
 
-const DualMeter = ({ left = 0.6, right = 0.5 }) => (
-  <div className="meter-v-dual">
-    <div className="meter-v">
-      {Array.from({ length: 20 }).map((_, i) => (
-        <div key={i} className={`led ${20-i <= left * 20 ? 'on' : ''} ${20-i > 16 ? 'warn' : ''}`}></div>
-      ))}
-    </div>
-    <div className="meter-v">
-      {Array.from({ length: 20 }).map((_, i) => (
-        <div key={i} className={`led ${20-i <= right * 20 ? 'on' : ''} ${20-i > 16 ? 'warn' : ''}`}></div>
-      ))}
-    </div>
-  </div>
-);
-
-const Module = ({ title, children, width = "100%" }) => (
-  <div className="module-card" style={{ width }}>
-    <div className="screw tl"></div><div className="screw tr"></div>
-    <div className="screw bl"></div><div className="screw br"></div>
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px' }}>
-      <span className="label-plugin">{title}</span>
-      <div className="toggle-btn on"></div>
-    </div>
-    <div style={{ display:'flex', justifyContent:'space-around', alignItems:'center', gap:'20px' }}>
+const Section = ({ title, children, showLine = true }) => (
+  <div className="section-zone">
+    <div className="section-header">{title}</div>
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', alignItems: 'flex-start' }}>
       {children}
     </div>
+    {showLine && <div className="separator-h" style={{ marginTop: '20px' }}></div>}
   </div>
 );
 
 function App() {
   return (
-    <div className="rack-canvas">
-      {/* HEADER SECTION WITH AI BUTTON */}
-      <div style={{ position:'absolute', top:'24px', left:'50%', transform:'translateX(-50%)', textAlign:'center', zIndex:10 }}>
-         <div className="ai-master-btn">
-            <span className="ai-text">NADA AI</span>
-            <span className="ai-sub">MASTER CORE</span>
-         </div>
+    <div className="rack-chassis">
+      {/* TOP HEADER */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+             <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#444' }}>NB</span>
+          </div>
+          <div>
+            <div style={{ fontSize: '16px', fontWeight: '900', letterSpacing: '1px' }}>NADA AUDIO</div>
+            <div style={{ fontSize: '10px', color: '#444', letterSpacing: '2px' }}>PRO VOCALIST SUITE</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+           <div className="label-sm">AI ANALYSIS</div>
+           <div className="ai-gold-btn"></div>
+           <div className="label-sm" style={{ color: 'var(--gold)' }}>ACTIVE</div>
+        </div>
       </div>
 
-      <div style={{ position:'absolute', top:'30px', left:'30px' }}>
-         <h1 style={{ fontFamily:'"Bebas Neue"', fontSize:'40px', margin:0, color:'#888' }}>NADA AUDIO</h1>
-         <span style={{ fontSize:'10px', letterSpacing:'4px', color:'#444' }}>PRO VOCALIST SUITE // 14-STAGE RACK</span>
+      <div className="separator-h"></div>
+
+      {/* CORE RACK GRID */}
+      <div className="main-grid">
+        {/* COLUMN 1: CORRECTION */}
+        <div className="section-zone" style={{ borderRight: '1px solid rgba(255,255,255,0.03)', paddingRight: '20px' }}>
+           <Section title="PITCH CORRECTION">
+              <Knob label="RETUNE" size={80} initialValue={0.8} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                 <Knob label="KEY" size={40} initialValue={0.3} />
+                 <Knob label="HMN" size={40} initialValue={0.4} />
+              </div>
+           </Section>
+           <Section title="SURGERY">
+              <Knob label="SSSH" size={50} />
+              <Knob label="MUD" size={50} />
+           </Section>
+        </div>
+
+        {/* COLUMN 2: DYNAMICS */}
+        <div className="section-zone" style={{ borderRight: '1px solid rgba(255,255,255,0.03)', paddingRight: '20px' }}>
+           <Section title="1176 FET">
+              <Knob label="IN" initialValue={0.4} />
+              <div className="meter-strip"><div className="meter-fill" style={{ height: '60%' }}></div></div>
+              <Knob label="OUT" initialValue={0.5} />
+           </Section>
+           <Section title="LA-2A OPTO">
+              <Knob label="PEAK" size={80} initialValue={0.7} />
+              <Knob label="GAIN" size={50} initialValue={0.3} />
+           </Section>
+        </div>
+
+        {/* COLUMN 3: TONE */}
+        <div className="section-zone" style={{ borderRight: '1px solid rgba(255,255,255,0.03)', paddingRight: '20px' }}>
+           <Section title="TONE COLOR">
+              <Knob label="AIR" initialValue={0.9} />
+              <Knob label="SSL" size={50} initialValue={0.2} />
+           </Section>
+           <Section title="HARMONICS">
+              <Knob label="SAT" size={70} initialValue={0.6} />
+              <Knob label="STERE" size={50} initialValue={0.8} />
+           </Section>
+        </div>
+
+        {/* COLUMN 4: MASTER */}
+        <div className="section-zone">
+           <Section title="SPACE">
+              <Knob label="REV" size={50} />
+              <Knob label="DLY" size={50} />
+           </Section>
+           <Section title="MASTERING" showLine={false}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                 <div className="label-sm" style={{ color: 'var(--neon-red)' }}>TP LIMITER</div>
+                 <Knob label="CEIL" size={90} initialValue={0.9} />
+                 <div style={{ fontSize: '12px', fontWeight: '900', color: '#333' }}>-10.0 LUFS</div>
+              </div>
+           </Section>
+        </div>
       </div>
 
-      <div style={{ display:'flex', gap:'24px', marginTop:'160px', width:'100%' }}>
-        {/* COL 1: PITCH & SURGERY */}
-        <div className="rack-column" style={{ width:'400px' }}>
-           <Module title="AUTOTUNE PRO">
-              <Knob label="RE-TUNE" size="big" initialValue={0.8} />
-              <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                 <div className="label-value" style={{ color:'#ffd700' }}>C# MIN</div>
-                 <Knob label="HUMAN" size="small" initialValue={0.3} />
-              </div>
-              <DualMeter left={0.8} right={0.8} />
-           </Module>
-           
-           <Module title="DE-ESSER">
-              <Knob label="FREQ" size="small" initialValue={0.6} />
-              <DualMeter left={0.3} right={0.3} />
-              <Knob label="THRESHOLD" size="small" initialValue={0.7} />
-           </Module>
-
-           <Module title="REDUCTIVE EQ (PRO-Q3)">
-              <div style={{ width:'120px', height:'80px', background:'#000', border:'1px solid #333', borderRadius:'4px', position:'relative' }}>
-                 <div style={{ position:'absolute', bottom:'20%', left:'10%', width:'80%', height:'2px', background:'var(--neon-red)', boxShadow:'var(--neon-glow)' }}></div>
-              </div>
-              <Knob label="GAIN" size="small" initialValue={0.4} />
-           </Module>
-        </div>
-
-        {/* COL 2: DYNAMICS */}
-        <div className="rack-column" style={{ width:'400px' }}>
-           <Module title="1176 FET LIMITER">
-              <Knob label="INPUT" initialValue={0.4} />
-              <DualMeter left={0.5} right={0.5} />
-              <Knob label="OUTPUT" initialValue={0.6} />
-           </Module>
-           
-           <Module title="LA-2A OPTO">
-              <Knob label="PEAK RED" size="big" initialValue={0.7} />
-              <Knob label="GAIN" size="small" initialValue={0.4} />
-              <DualMeter left={0.7} right={0.7} />
-           </Module>
-
-           <Module title="MODERN BUS COMP">
-              <Knob size="small" label="THR" initialValue={0.2} />
-              <Knob size="small" label="RAT" initialValue={0.6} />
-              <DualMeter left={0.2} right={0.2} />
-           </Module>
-        </div>
-
-        {/* COL 3: ANALOG COLOR */}
-        <div className="rack-column" style={{ width:'400px' }}>
-           <Module title="EQP-1A TONE">
-              <Knob size="small" label="LOW" initialValue={0.5} />
-              <Knob label="AIR BOOST" initialValue={0.9} />
-              <Knob size="small" label="HIGH" initialValue={0.3} />
-           </Module>
-
-           <Module title="SSL 4000E CONSOLE">
-              <Knob label="DRIVE" initialValue={0.3} />
-              <Knob label="ANALOG" size="small" initialValue={1.0} />
-           </Module>
-
-           <Module title="BLACK BOX SAT">
-              <Knob label="DRIVE" size="big" initialValue={0.6} />
-              <div className="toggle-btn on"></div>
-           </Module>
-           
-           <Module title="STEREO MAKER">
-              <Knob label="WIDTH" initialValue={0.8} />
-           </Module>
-        </div>
-
-        {/* COL 4: MASTER & SPACE */}
-        <div className="rack-column" style={{ width:'400px' }}>
-           <Module title="MASTER EQ">
-              <Knob label="TONE" initialValue={0.5} />
-           </Module>
-
-           <Module title="HITVILLE REVERB">
-              <Knob size="small" label="MIX" initialValue={0.3} />
-              <Knob label="DECAY" initialValue={0.7} />
-           </Module>
-
-           <Module title="WAVES H-DELAY">
-              <Knob size="small" label="TIME" initialValue={0.4} />
-              <Knob size="small" label="FB" initialValue={0.6} />
-           </Module>
-
-           <Module title="BX_LIMITER TRUE PEAK">
-              <div style={{ textAlign:'center' }}>
-                 <div className="label-value" style={{ fontSize:'14px' }}>-9.5 LUFS</div>
-                 <Knob label="THRESHOLD" size="big" initialValue={0.9} />
-              </div>
-              <DualMeter left={0.9} right={0.9} />
-           </Module>
-        </div>
+      {/* FOOTER */}
+      <div className="separator-h"></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0' }}>
+         <div className="label-sm">S-VERSION 12.55</div>
+         <div className="label-sm">PLUGIN ALLIANCE GRADE</div>
       </div>
     </div>
   );

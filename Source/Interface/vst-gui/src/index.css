@@ -1,162 +1,90 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
 
 :root {
-  --bg-deep: #0e0f12;
-  --bg-panel: #181a1f;
-  --bg-module: #1f2228;
-  --bg-glow: #2a2c32;
+  --bg-main: #1c1e21;
+  --bg-gradient: linear-gradient(180deg, #242629 0%, #16181a 100%);
+  --border-subtle: rgba(255, 255, 255, 0.03);
   --neon-red: #ff3c3c;
-  --neon-glow: 0 0 15px rgba(255, 60, 60, 0.5);
-  --gold: #ffd700;
-  --text-primary: #d5d7e0;
-  --text-secondary: #666;
-  --text-value: #ff3c3c;
+  --gold: #d4af37;
+  --text-dim: #6b6d70;
+  --text-active: #d5d7e0;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg-deep);
-  color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
-  overflow: hidden;
+  margin: 0; background: #000; font-family: 'Inter', sans-serif; overflow: hidden; color: var(--text-active);
 }
 
-/* RACK CHASSIS */
-.rack-canvas {
-  width: 1610px;
-  height: 900px;
-  background: linear-gradient(to bottom, var(--bg-panel), var(--bg-deep));
-  padding: 24px;
-  box-sizing: border-box;
-  display: flex;
-  gap: 24px;
+.rack-chassis {
+  width: 1600px; height: 900px;
+  background: var(--bg-gradient);
+  padding: 40px; box-sizing: border-box;
   position: relative;
-  box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+  display: flex; flex-direction: column; gap: 40px;
+  box-shadow: inset 0 0 150px rgba(0,0,0,0.5);
 }
 
-.rack-canvas::before {
-  content: "";
-  position: absolute; top:0; left:0; width:100%; height:100%;
-  background-image: url("https://www.transparenttextures.com/patterns/brushed-alum.png");
-  opacity: 0.05; pointer-events: none;
+/* SUBTLE SEPARATORS */
+.separator-v { width: 1px; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.05), transparent); }
+.separator-h { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent); width: 100%; }
+
+/* GRID LAYOUT */
+.main-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; height: 100%; }
+
+/* MODULE SECTION - NO BOXES, JUST ZONES */
+.section-zone { position: relative; display: flex; flex-direction: column; gap: 20px; }
+.section-header { 
+  font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--text-dim); 
+  text-transform: uppercase; margin-bottom: 20px; text-align: center;
 }
 
-/* COLUMNS */
-.rack-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  border-right: 1px solid var(--bg-glow);
-  padding-right: 12px;
-}
-.rack-column:last-child { border-right: none; }
+/* KNOB 2.0 - BX STYLE */
+.knob-unit { display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
 
-/* MODULE CARD - THE RELIEF */
-.module-card {
-  background: var(--bg-module);
-  border-radius: 4px;
-  border: 1px solid #111;
-  padding: 16px;
-  position: relative;
-  box-shadow: 
-    inset 2px 2px 4px rgba(0,0,0,0.8),
-    inset -1px -1px 1px rgba(255,255,255,0.05),
-    0 10px 30px rgba(0,0,0,0.6);
-  border-bottom: 2px solid #000;
-  border-right: 2px solid #000;
-}
-
-.module-card h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 14px;
-  letter-spacing: 2.5px;
-  color: #444;
-  margin: 0 0 16px 0;
-  text-transform: uppercase;
-  border-bottom: 1px solid #222;
-  padding-bottom: 4px;
-}
-
-/* SCREWS */
-.screw {
-  position: absolute; width: 8px; height: 8px;
-  background: radial-gradient(circle at 30% 30%, #444, #111);
-  border-radius: 50%; box-shadow: 1px 1px 2px #000;
-}
-.screw.tl { top: 8px; left: 8px; }
-.screw.tr { top: 8px; right: 8px; }
-.screw.bl { bottom: 8px; left: 8px; }
-.screw.br { bottom: 8px; right: 8px; }
-
-/* KNOB COMPONENT - ANISOTROPIC + RED RING */
-.knob-container {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  position: relative;
-}
-
-.knob-ring-svg {
-  position: absolute; top: 0; left: 0; pointer-events: none;
-}
-
-.knob-outer {
-  width: 70px; height: 70px;
-  background: 
-    conic-gradient(from 180deg, #111, #444 45deg, #111 90deg, #444 135deg, #111 180deg, #444 225deg, #111 270deg, #444 315deg, #111),
-    radial-gradient(circle at center, #222, #000);
-  border-radius: 50%;
-  border: 3px solid #000;
-  position: relative;
-  box-shadow: 
-    0 10px 20px rgba(0,0,0,0.8),
-    0 0 0 1px #2a2c32;
-  cursor: ns-resize;
+.knob-bezel {
+  width: 60px; height: 60px;
+  background: #111; border-radius: 50%;
   display: flex; justify-content: center; align-items: center;
+  box-shadow: inset 2px 2px 5px #000, 1px 1px 2px rgba(255,255,255,0.05);
+  position: relative;
 }
 
-.knob-outer.big { width: 100px; height: 100px; }
-.knob-outer.small { width: 42px; height: 42px; border-width: 2px; }
-
-.knob-indicator {
-  position: absolute; width: 2px; height: 15px; background: #fff;
-  top: 10%; left: 50%; transform: translateX(-50%); border-radius: 1px;
-}
-.knob-outer.small .knob-indicator { height: 8px; }
-
-/* THE AI GEM / BUTTON */
-.ai-master-btn {
-  width: 120px; height: 120px;
-  background: radial-gradient(circle at 40% 40%, #2a2c32, #000);
+.knob-body {
+  width: 44px; height: 44px;
+  background: radial-gradient(circle at 35% 35%, #333, #0b0b0d);
   border-radius: 50%;
-  border: 6px solid #111;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), 0 20px 40px #000;
-  position: relative; cursor: pointer;
-  transition: transform 0.2s;
-}
-.ai-master-btn:hover { transform: scale(1.05); }
-.ai-master-btn::after {
-  content: ""; position: absolute; width: 100%; height: 100%;
-  border-radius: 50%; border: 2px solid var(--gold);
-  box-shadow: 0 0 20px var(--gold); opacity: 0.6;
+  box-shadow: 4px 10px 15px rgba(0,0,0,0.6), inset 0 0 2px rgba(255,255,255,0.1);
+  cursor: ns-resize; position: relative;
 }
 
-.ai-text { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--gold); line-height: 0.8; text-shadow: 0 0 10px var(--gold); }
-.ai-sub { font-size: 10px; font-weight: 900; color: #555; letter-spacing: 2px; }
+.knob-tick {
+  position: absolute; width: 6px; height: 6px; background: var(--neon-red);
+  border-radius: 50%; top: 4px; left: 50%; transform: translateX(-50%);
+  box-shadow: 0 0 8px var(--neon-red);
+}
 
-/* DUAL METERS */
-.meter-v-dual {
-  display: flex; gap: 4px; padding: 4px; background: #000; border: 1px solid #222; border-radius: 2px;
+.glow-ring {
+  position: absolute; top: -8px; left: -8px; width: 76px; height: 76px;
+  pointer-events: none;
 }
-.meter-v {
-  width: 8px; height: 80px; display: flex; flex-direction: column-reverse; gap: 1px;
-}
-.led { width: 100%; height: 3px; background: #1a1b1e; }
-.led.on { background: var(--neon-red); box-shadow: var(--neon-glow); }
-.led.on.warn { background: #ffd700; box-shadow: 0 0 5px #ffd700; }
 
-/* HARDWARE LABELS */
-.label-plugin {
-  font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #ccc; letter-spacing: 1px;
+/* AI BUTTON - GOLD & ELEGANT */
+.ai-gold-btn {
+  width: 24px; height: 24px;
+  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+  border-radius: 50%; border: 2px solid #000;
+  box-shadow: 0 0 15px rgba(255,215,0,0.4), inset 0 0 5px rgba(0,0,0,0.5);
+  cursor: pointer; position: relative;
 }
+
+/* METERS - NEAT & TIGHT */
+.meter-strip {
+  width: 4px; height: 60px; background: #000; border-radius: 1px; overflow: hidden; position: relative;
+}
+.meter-fill {
+  position: absolute; bottom: 0; width: 100%; background: var(--neon-red);
+  box-shadow: 0 0 8px var(--neon-red); transition: height 0.1s;
+}
+
+/* TEXT */
+.label-sm { font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.value-sm { font-size: 10px; font-weight: 500; color: var(--text-active); margin-top: 2px; }
