@@ -94,30 +94,26 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
         att = std::make_unique<SliderAttachment>(audioProcessor.apvts, paramID, s);
     };
 
+    // SLOT 1: AI
     setupSlider(autotuneSpeedSlider, "AUTOTUNE_SPEED", autotuneSpeedAtt);
+    
+    // SLOT 2: DYNAMICS
     setupSlider(fetThreshSlider, "FET_THRESH", fetThreshAtt);
     setupSlider(fetRatioSlider, "FET_RATIO", fetRatioAtt);
     setupSlider(optoThreshSlider, "OPTO_THRESH", optoThreshAtt);
+
+    // SLOT 3: FX
     setupSlider(reverbMixSlider, "REVERB_MIX", reverbMixAtt);
     setupSlider(delayMixSlider, "DELAY_MIX", delayMixAtt);
-    setupSlider(stereoWidthSlider, "STEREO_WIDTH", stereoWidthAtt);
+    setupSlider(stereoWidthSlider, "AIR", stereoWidthAtt); // Using AIR param for texture
 
-    // Key / Scale (Legacy Selector)
-    addAndMakeVisible(keySelector);
-    keySelector.addItemList({"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}, 1);
-    keyAtt = std::make_unique<ComboAttachment>(audioProcessor.apvts, "AUTOTUNE_KEY", keySelector);
-    
-    addAndMakeVisible(scaleSelector);
-    scaleSelector.addItemList({"Major", "Minor"}, 1);
-    scaleAtt = std::make_unique<ComboAttachment>(audioProcessor.apvts, "AUTOTUNE_SCALE", scaleSelector);
-
-    // Buttons
+    // NADA Button
     addAndMakeVisible(nadaButton);
-    nadaButton.setName("NADA AI");
+    nadaButton.setButtonText("ACTIVATE NADA AI");
     nadaButton.addListener(this);
 
     startTimerHz(30);
-    setSize (1000, 750);
+    setSize (1000, 650);
 }
 
 NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
@@ -197,23 +193,21 @@ void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 
 void NADAAudioProcessorEditor::resized()
 {
-    // Autotune (Left)
-    autotuneSpeedSlider.setBounds(90, 160, 220, 220);
-    keySelector.setBounds(90, 390, 100, 30);
-    scaleSelector.setBounds(210, 390, 100, 30);
+    // SLOT 1 (50-330)
+    autotuneSpeedSlider.setBounds(90, 160, 200, 200);
     
-    // Dynamics (Center)
-    fetThreshSlider.setBounds(370, 160, 130, 130);
-    optoThreshSlider.setBounds(520, 160, 130, 130);
-    fetRatioSlider.setBounds(445, 300, 130, 130);
+    // SLOT 2 (350-650)
+    fetThreshSlider.setBounds(370, 150, 120, 120);
+    optoThreshSlider.setBounds(510, 150, 120, 120);
+    fetRatioSlider.setBounds(440, 280, 120, 120);
 
-    // FX (Right)
-    reverbMixSlider.setBounds(710, 160, 120, 120);
-    delayMixSlider.setBounds(860, 160, 120, 120);
-    stereoWidthSlider.setBounds(785, 290, 130, 130);
+    // SLOT 3 (680-960)
+    reverbMixSlider.setBounds(710, 150, 110, 110);
+    delayMixSlider.setBounds(850, 150, 110, 110);
+    stereoWidthSlider.setBounds(780, 280, 120, 120);
 
-    // NADA Button Hitbox (Bottom Center)
-    nadaButton.setBounds(getWidth()/2 - 100, getHeight() - 140, 200, 80);
+    // NADA Button
+    nadaButton.setBounds(getWidth()/2 - 100, 420, 200, 40);
 }
 
 void NADAAudioProcessorEditor::buttonClicked (juce::Button* button)
