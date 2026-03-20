@@ -10,49 +10,43 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
                                        float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
                                        juce::Slider& slider)
 {
-    auto outline = slider.findColour (juce::Slider::rotarySliderOutlineColourId);
-    auto fill    = slider.findColour (juce::Slider::rotarySliderFillColourId);
-
-    auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (10);
+    auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (8);
     auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
-    auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-    auto lineW = 2.0f;
-    auto arcRadius = radius - lineW * 2.5f;
-
-    // --- 1. OUTER RING (Shadow & Depth) ---
-    juce::Path backgroundArc;
-    backgroundArc.addCentredArc (bounds.getCentreX(), bounds.getCentreY(), arcRadius, arcRadius, 0.0f, rotaryStartAngle, rotaryEndAngle, true);
-    g.setColour (juce::Colours::black.withAlpha (0.4f));
-    g.strokePath (backgroundArc, juce::PathStrokeType (lineW * 2.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    // --- 2. THE KNOB BODY (Elite Metallic) ---
-    auto knobRect = bounds.reduced(lineW * 4.0f);
-    juce::Path knobPath;
-    knobPath.addEllipse(knobRect);
+    auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
     
-    juce::ColourGradient knobGrad (juce::Colour(0xff444444), knobRect.getX(), knobRect.getY(),
-                                  juce::Colour(0xff1a1a1a), knobRect.getRight(), knobRect.getBottom(), true);
-    knobGrad.addColour (0.5, juce::Colour(0xff222222));
-    g.setGradientFill (knobGrad);
-    g.fillPath(knobPath);
-    
-    // Top highlight (Brushed effect)
-    g.setColour(juce::Colours::white.withAlpha(0.05f));
-    g.drawEllipse(knobRect.reduced(1), 1.0f);
+    // --- 1. CHASSIS DEPTH --- (Ambient Occlusion)
+    g.setColour (juce::Colours::black.withAlpha (0.6f));
+    g.fillEllipse (bounds.getCentreX() - radius - 2, bounds.getCentreY() - radius + 3, radius * 2.2f, radius * 2.2f);
 
-    // --- 3. THE INDICATOR (Glowing Red Line) ---
+    // --- 2. THE KNOB (Gunmetal Steel) ---
+    auto knobRadius = radius * 0.9f;
+    juce::Path knob;
+    knob.addEllipse (bounds.getCentreX() - knobRadius, bounds.getCentreY() - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f);
+    
+    juce::ColourGradient grad (juce::Colour (0xff333333), bounds.getCentreX(), bounds.getCentreY() - knobRadius,
+                               juce::Colour (0xff111111), bounds.getCentreX(), bounds.getCentreY() + knobRadius, false);
+    grad.addColour (0.5, juce::Colour (0xff222222));
+    g.setGradientFill (grad);
+    g.fillPath (knob);
+    
+    // Top Rim highlight
+    g.setColour (juce::Colours::white.withAlpha (0.05f));
+    g.drawEllipse (bounds.getCentreX() - knobRadius, bounds.getCentreY() - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f, 1.0f);
+
+    // --- 3. THE INDICATOR (Laser Red Glow) ---
     juce::Path p;
-    auto pointerLength = radius * 0.4f;
-    auto pointerThickness = 3.0f;
-    p.addRoundedRectangle (-pointerThickness * 0.5f, -radius + 6.0f, pointerThickness, pointerLength, 1.5f);
-    p.applyTransform (juce::AffineTransform::rotation (toAngle).translated (bounds.getCentreX(), bounds.getCentreY()));
+    auto pointerLength = knobRadius * 0.5f;
+    auto pointerThickness = 4.0f;
+    p.addRoundedRectangle (-pointerThickness * 0.5f, -knobRadius + 2.0f, pointerThickness, pointerLength, 1.0f);
+    p.applyTransform (juce::AffineTransform::rotation (angle).translated (bounds.getCentreX(), bounds.getCentreY()));
     
-    g.setColour (juce::Colours::red.withBrightness(0.9f));
+    // Outer Glow
+    g.setColour (juce::Colours::red.withAlpha (0.3f));
+    g.strokePath (p, juce::PathStrokeType (3.0f));
+    
+    // Bright Core
+    g.setColour (juce::Colours::red.withBrightness(1.2f));
     g.fillPath (p);
-    
-    // Indicator Shadow
-    g.setColour (juce::Colours::black.withAlpha(0.5f));
-    g.strokePath (p, juce::PathStrokeType(1.0f));
 }
 
 void NADALookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& button,
@@ -133,98 +127,72 @@ NADAAudioProcessorEditor::~NADAAudioProcessorEditor()
 
 void NADAAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // --- 1. PROCEDURAL BRUSHED TITANIUM BACKGROUND ---
-    g.fillAll (juce::Colour (0xff1a1a1a));
+    // --- SINFUL DARK METAL BACKGROUND ---
+    g.fillAll (juce::Colour (0xff0d0d0d));
     
-    // Vignette Effect (Elite Polish)
-    juce::ColourGradient bgGrad (juce::Colours::transparentWhite, 0, 0,
-                                juce::Colours::black.withAlpha(0.7f), 0, (float)getHeight(), false);
-    g.setGradientFill(bgGrad);
-    g.fillRect(getLocalBounds());
+    // Brushed Grain Texture Simulation
+    auto& random = juce::Random::getSystemRandom();
+    for (int i = 0; i < 2000; ++i) {
+        g.setColour (juce::Colours::white.withAlpha (random.nextFloat() * 0.03f));
+        g.drawRect (random.nextInt (getWidth()), random.nextInt (getHeight()), 1, 1);
+    }
 
-    // Decorative Lines (Vector Brushed Effect)
-    g.setColour(juce::Colours::white.withAlpha(0.02f));
-    for (int i = 0; i < getWidth(); i += 2)
-        g.drawVerticalLine(i, 0.0f, (float)getHeight());
+    // Rack Structure Dividers
+    g.setColour (juce::Colours::black);
+    g.fillRect (0.0f, 100.0f, (float)getWidth(), 4.0f); // Top divider
+    g.fillRect (0.0f, 480.0f, (float)getWidth(), 4.0f); // Bottom divider
 
-    // Titles (Antares/PA Style)
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::Font ("Inter", 26.0f, juce::Font::bold));
-    g.drawText ("NADA BOSS VOCAL SUITE", 40, 40, 500, 40, juce::Justification::left);
+    // --- ACCENT GLOW (Red Header) ---
+    g.setGradientFill (juce::ColourGradient (juce::Colours::red.withAlpha (0.08f), 0, 0,
+                                            juce::Colours::transparentWhite, 0, 100, false));
+    g.fillRect (0, 0, getWidth(), 100);
+
+    // Titles
+    g.setColour (juce::Colours::red);
+    g.setFont (juce::Font ("Inter", 42.0f, juce::Font::bold));
+    g.drawText ("NADA BOSS", 40, 20, 300, 60, juce::Justification::left);
     
+    g.setColour (juce::Colours::white.withAlpha (0.4f));
     g.setFont (12.0f);
-    g.setColour (juce::Colours::cyan.withAlpha(0.7f));
-    g.drawText ("ULTIMATE AI EDITION // SPECTRAL MATCHING ENGINE", 40, 75, 500, 20, juce::Justification::left);
+    g.drawText ("V3 // ULTIMATE SINFUL METAL RACK", 42, 65, 400, 20, juce::Justification::left);
 
-    // Section Labels
-    g.setColour(juce::Colours::grey.brighter());
-    g.setFont(juce::Font("Inter", 14.0f, juce::Font::plain));
-    g.drawText("AUTOTUNE", 100, 130, 200, 20, juce::Justification::centred);
-    g.drawText("DYNAMICS", 360, 130, 300, 20, juce::Justification::centred);
-    g.drawText("FX STACK", 700, 130, 280, 20, juce::Justification::centred);
-
-    // --- 2. VUMETERS (Vector Needle Simulation) ---
-    auto drawMeter = [&](int x, int y, int w, int h, float val, const char* label)
-    {
-        // Glass Overlay
-        g.setColour(juce::Colour(0xff050505));
-        g.fillRoundedRectangle(x, y, w, h, 8.0f);
-        
-        // Scale Lights
-        g.setColour(juce::Colours::white.withAlpha(0.4f));
-        g.setFont(10.0f);
-        g.drawText(label, x, y + h - 15, w, 15, juce::Justification::centred);
-        
-        // Background Arc (Vector)
-        juce::Path arc;
-        arc.addCentredArc(x + w/2, y + h + 10, w*0.85f, w*0.85f, 0.0f, -0.9f, 0.9f, true);
-        g.setColour(juce::Colours::grey.darker().darker());
-        g.strokePath(arc, juce::PathStrokeType(3.0f));
-
-        // Ticks
-        for (float a = -0.9f; a <= 0.9f; a += 0.3f) {
-            juce::Path tick;
-            tick.startNewSubPath(x + w/2 + std::sin(a) * (h*0.75f), y + h + 10 - std::cos(a) * (h*0.75f));
-            tick.lineTo(x + w/2 + std::sin(a) * (h*0.85f), y + h + 10 - std::cos(a) * (h*0.85f));
-            g.strokePath(tick, juce::PathStrokeType(1.0f));
-        }
-
-        // Needle (Physics-based)
-        float angle = -0.9f + val * 1.8f;
-        juce::Path needle;
-        needle.startNewSubPath(x + w/2, y + h + 10);
-        needle.lineTo(x + w/2 + std::sin(angle) * (h*0.85f), y + h + 10 - std::cos(angle) * (h*0.85f));
-        g.setColour(juce::Colours::red.withBrightness(0.9f));
-        g.strokePath(needle, juce::PathStrokeType(1.5f));
+    // --- SECTION LABELS ---
+    auto drawLabel = [&](int x, int y, int w, juce::String text) {
+        g.setColour (juce::Colours::white.withAlpha (0.2f));
+        g.setFont (juce::Font (12.0f, juce::Font::bold));
+        g.drawText (text, x, y, w, 20, juce::Justification::centred);
+        g.setColour (juce::Colours::red.withAlpha (0.3f));
+        g.drawHorizontalLine (y + 18, (float)x, (float)(x + w));
     };
 
-    drawMeter(40, 500, 140, 90, inputMeter.val, "INPUT (dB)");
-    drawMeter(210, 500, 140, 90, gainReductionMeter.val, "GR (dB)");
-    drawMeter(820, 500, 140, 90, outputMeter.val, "OUTPUT (dB)");
+    drawLabel (50, 120, 280, "AI TREATMENT");
+    drawLabel (350, 120, 300, "DYNAMIC SURGERY");
+    drawLabel (680, 120, 280, "TEXTURE & SPACE");
 
-    // --- 3. SPECTRAL ANALYZER DISPLAY [Legit AI View] ---
-    g.setColour(juce::Colour(0xff080808));
-    g.fillRoundedRectangle(360, 480, 440, 120, 10.0f);
-    g.setColour(juce::Colours::cyan.withAlpha(0.1f));
-    g.drawRoundedRectangle(360, 480, 440, 120, 10.0f, 1.0f);
-
-    // Draw Frequency Bars (Historical AI Data)
-    float low = audioProcessor.lastAnalysis.lowEnergy * 400.0f;
-    float mid = audioProcessor.lastAnalysis.midEnergy * 400.0f;
-    float high = audioProcessor.lastAnalysis.highEnergy * 400.0f;
-
-    auto drawBand = [&](int x, float val, const juce::Colour& c) {
-        g.setColour(c.withAlpha(0.4f));
-        g.fillRect((float)x, 600.0f - val, 50.0f, val);
+    // --- ANALOG VU METERS ---
+    auto drawVU = [&](int x, int y, float val, juce::String label) {
+        g.setColour (juce::Colour (0xff050505));
+        g.fillRoundedRectangle (x, y, 160, 100, 4.0f);
+        g.setColour (juce::Colours::red.withAlpha (0.4f));
+        g.drawRoundedRectangle (x, y, 160, 100, 4.0f, 1.5f);
+        
+        // Needle Pivot
+        float cx = x + 80.0f;
+        float cy = y + 105.0f;
+        float angle = juce::jmap (val, 0.0f, 1.0f, -0.7f, 0.7f);
+        
+        g.setColour (juce::Colours::red.withBrightness(1.5f));
+        g.setOpacity(0.9f);
+        g.drawLine (cx, cy, cx + std::sin(angle)*90, cy - std::cos(angle)*90, 2.5f);
+        
+        g.setColour (juce::Colours::white.withAlpha (0.5f));
+        g.setFont (10.0f);
+        g.drawText (label, x, y + 80, 160, 20, juce::Justification::centred);
     };
 
-    drawBand(400, low, juce::Colours::orange);
-    drawBand(550, mid, juce::Colours::cyan);
-    drawBand(700, high, juce::Colours::white);
-
-    g.setColour(juce::Colours::white.withAlpha(0.4f));
-    g.setFont(10.0f);
-    g.drawText("AI SPECTRAL ANALYSIS ACTIVE", 360, 485, 440, 20, juce::Justification::centred);
+    drawVU (100, 500, inputMeter.val, "INPUT (dB)");
+    drawVU (420, 500, gainReductionMeter.val, "COMPRESSION (dB)");
+    drawVU (740, 500, outputMeter.val, "OUTPUT (dB)");
 }
 
 void NADAAudioProcessorEditor::resized()
