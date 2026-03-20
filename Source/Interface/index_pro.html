@@ -2,123 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NADA BOSS GIGA-RACK 3D</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style_pro.css">
-    <title>NADA BOSS GIGA-RACK MASTERPIECE</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
+        #labels-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .bebas { font-family: 'Bebas Neue', sans-serif; color: #fff; }
+        .branding { position: absolute; top: 40px; left: 40px; }
+        .spec { position: absolute; top: 40px; right: 40px; text-align: right; }
+        .label-v { font-size: 10px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
+    </style>
 </head>
 <body>
-    <!-- PROCEDURAL NOISE ENGINE (NO IMAGES) -->
-    <svg style="display:none">
-        <filter id="metal-noise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.05 0.5" numOctaves="10" result="noise" />
-            <feColorMatrix type="saturate" values="0" />
-            <feBlend in="SourceGraphic" in2="noise" mode="soft-light" />
-        </filter>
-    </svg>
-
-    <div class="hw-rack">
-        <div class="brushed-texture"></div>
-        
-        <!-- RACK ARCHITECTURE -->
-        <div class="rack-ear l"><div class="ear-bolt"></div><div class="ear-bolt"></div><div class="ear-bolt"></div></div>
-        <div class="rack-ear r"><div class="ear-bolt"></div><div class="ear-bolt"></div><div class="ear-bolt"></div></div>
-
-        <!-- HEADER -->
-        <div class="master-header">
-            <div class="brand-name">
-                <h1 class="bebas">NADA AUDIO</h1>
-                <span class="label-txt" style="text-align:left; color:#31343a;">PRO-VOCALIST SUITE // 14-STAGE SCRIPTED 3D ENGINE</span>
-            </div>
-            <div class="ai-halo-button">
-                <h1>NADA AI</h1>
-            </div>
-            <div class="vst-id">
-                <h1 class="bebas">VST3</h1>
-                <span class="label-txt" style="text-align:right; color:var(--neon-red);">HYPER-NET RESOLUTION // JUCE 8.0</span>
-            </div>
+    <div id="labels-overlay">
+        <div class="branding">
+            <h1 class="bebas" style="font-size: 64px; margin: 0; letter-spacing: -3px;">NADA AUDIO</h1>
+            <span class="label-v">ULTIMATE 3D HARDWARE SUITE // 14-STAGES</span>
         </div>
-
-        <!-- THE GIGA RACK GRID -->
-        <div class="rack-grid">
-            
-            <!-- MODULE 1: AUTOTUNE ENGINE -->
-            <section class="rack-unit-box" style="grid-column: span 2;">
-                <h3>01. AUTOTUNE ELITE (KEY & SCALE)</h3>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">PITCH CORRECTION</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">SMOOTH / HARD</span></div>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
-                        <button class="bebas" style="background:#200; border:1px solid #500; color:#f00; padding:10px 20px; font-size:16px; cursor:pointer;">C# MINOR</button>
-                        <button class="bebas" style="background:#111; border:1px solid #333; color:#555; padding:10px 20px; font-size:16px;">CHROMATIC</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- MODULE 2: MUD EQ -->
-            <section class="rack-unit-box">
-                <h3>02. REDUCTIVE MUD EQ</h3>
-                <div style="display:flex; justify-content:center; align-items:center; gap:25px;">
-                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">CUT DEPTH</span></div>
-                    <div class="meter-column">
-                        <div class="led-seg on"></div><div class="led-seg on"></div><div class="led-seg on"></div>
-                        <div class="led-seg on"></div><div class="led-seg"></div><div class="led-seg"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- MODULE 3 & 4: DYNAMICS GANG -->
-            <section class="rack-unit-box">
-                <h3>03-04. PRIMARY COMP (FET / OPTO)</h3>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">1176 FET</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d xl" style="transform:rotate(45deg)"></div><span class="label-txt">LA-2A OPTO</span></div>
-                </div>
-            </section>
-
-            <!-- MODULE 5, 6, 7: TONAL COLOR -->
-            <section class="rack-unit-box">
-                <h3>05-07. ANALOG COLOR (EQP / SSL / SAT)</h3>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-cell"><div class="knob-pro-3d sm"></div><span class="label-txt">EQP-1A</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">SSL EQ</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d sm"></div><span class="label-txt">GRAIN SAT</span></div>
-                </div>
-            </section>
-
-            <!-- MODULE 8, 9, 10: VOCAL SURGERY -->
-            <section class="rack-unit-box">
-                <h3>08-10. VOCAL SURGERY (DE-ESS / FINAL EQ)</h3>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">FINAL COMP</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d sm"></div><span class="label-txt">DE-ESSER</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">FINAL EQ</span></div>
-                </div>
-            </section>
-
-            <!-- MODULE 11, 12: THE MASTERS -->
-            <section class="rack-unit-box">
-                <h3>11-12. MASTERING UNIT (WIDTH / LIMITER)</h3>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-cell"><div class="knob-pro-3d"></div><span class="label-txt">STEREO WIDTH</span></div>
-                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">HP LIMITER</span></div>
-                </div>
-            </section>
-
-            <!-- MODULE 13, 14: BUS FX -->
-            <section class="rack-unit-box" style="grid-column: span 3;">
-                <h3>13-14. SEND BUS EFFECTS (REVERB / DELAY)</h3>
-                <div style="display:flex; justify-content:space-around; align-items:center;">
-                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">CHAMBER REVERB</span></div>
-                    <div style="display:flex; flex-direction:column; gap:20px;">
-                        <div style="width:12px; height:12px; background:var(--neon-red); border-radius:50%; box-shadow:var(--red-glow);"></div>
-                        <div style="width:12px; height:12px; background:var(--neon-red); border-radius:50%; box-shadow:var(--red-glow);"></div>
-                    </div>
-                    <div class="knob-cell"><div class="knob-pro-3d xl"></div><span class="label-txt">TAPE DELAY</span></div>
-                </div>
-            </section>
+        <div class="spec">
+            <h1 class="bebas" style="font-size: 64px; margin: 0; color: #222;">VST3</h1>
+            <span class="label-v" style="color: #ff3c3c;">HYPER-NET WEBGL ENGINE</span>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="three_ui.js"></script>
 </body>
 </html>
