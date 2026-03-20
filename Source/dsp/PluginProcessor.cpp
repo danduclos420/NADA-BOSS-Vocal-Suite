@@ -39,7 +39,7 @@ void NADAAudioProcessor::releaseResources() {}
 
 void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused(buffer, midiMessages);
+    juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -126,11 +126,15 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     reverb.process(context);
 
     // 13. Delay
-    // Simplified sample-wise delay loop for H-Delay
+    // Simplified sample-wise delay loop for H-Delay - STEREO CORRECTED
+    float delayMix = apvts.getRawParameterValue("DELAY_MIX")->load();
     for (int s = 0; s < buffer.getNumSamples(); ++s) {
         float delL = delay.lineL.popSample(0);
-        delay.lineL.pushSample(0, left[s] + delL * 0.3f);
-        left[s] = left[s] * 0.8f + delL * 0.2f;
+        float delR = delay.lineR.popSample(0);
+        delay.lineL.pushSample(0, left[s]);
+        delay.lineR.pushSample(0, right[s]);
+        left[s]  = left[s]  * (1.0f - delayMix) + delL * delayMix;
+        right[s] = right[s] * (1.0f - delayMix) + delR * delayMix;
     }
 
     outputLevel = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
@@ -254,8 +258,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterFloat>("FET_RELEASE", "FET Release", 50.0f, 1100.0f, 100.0f));
 
     // 4. LA-2A
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_RED", "Peak Red", 0.0f, 100.0f, 30.0f));
-
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("OPTO_RED", "Peak Red", 0.0f, 100.0f, 0.0f));
     // 5. Pultec
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PULTEC_LOW_BOOST", "Low Boost", 0.0f, 12.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PULTEC_HIGH_BOOST", "High Boost", 0.0f, 12.0f, 0.0f));
@@ -264,21 +267,17 @@ juce::AudioProcessorValueTreeState::ParameterLayout NADAAudioProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterFloat>("SSL_DRIVE", "SSL Drive", 0.0f, 1.0f, 0.1f));
 
     // 7. HG-2
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("SAT_DRIVE", "Sat Drive", 0.0f, 1.0f, 0.1f));
-
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("SAT_DRIVE", "Sat Drive", 0.0f, 1.0f, 0.0f));
     // 8. R-Vox
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("RVOX_COMP", "Vox Comp", -30.0f, 0.0f, -10.0f));
-
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("RVOX_COMP", "Vox Comp", -30.0f, 0.0f, 0.0f));
     // 9. De-esser
     params.push_back(std::make_unique<juce::AudioParameterFloat>("DEESSER_RANGE", "De-Esser Range", 0.0f, 1.0f, 0.2f));
 
     // 10. Master
     params.push_back(std::make_unique<juce::AudioParameterFloat>("STEREO_WIDTH", "Width", 0.0f, 2.0f, 1.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LIMITER_THRESH", "Limiter Threshold", -24.0f, 0.0f, -0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.2f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.5f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.2f));
-
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_MIX", "Reverb Mix", 0.0f, 1.0f, 0.0f));    params.push_back(std::make_unique<juce::AudioParameterFloat>("REVERB_SIZE", "Room Size", 0.0f, 1.0f, 0.5f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DELAY_MIX", "Delay Mix", 0.0f, 1.0f, 0.0f));
     return { params.begin(), params.end() };
 }
 
