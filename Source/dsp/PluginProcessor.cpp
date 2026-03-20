@@ -35,6 +35,8 @@ void NADAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     analysisBufferPos = 0;
 }
 
+void NADAAudioProcessor::releaseResources() {}
+
 void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -172,6 +174,11 @@ void NADAAudioProcessor::updateDSPChain()
     revParams.wetLevel = apvts.getRawParameterValue("REVERB_MIX")->load();
     revParams.dryLevel = 1.0f - revParams.wetLevel;
     reverb.setParameters(revParams);
+}
+
+void NADAAudioProcessor::triggerNADAAnalysis()
+{
+    analysisRequested = true;
 }
 
 void NADAAudioProcessor::runSpectralAnalysis()
