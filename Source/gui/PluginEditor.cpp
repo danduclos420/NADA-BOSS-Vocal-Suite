@@ -25,18 +25,22 @@ void NADALookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     g.setColour (juce::Colour (0xff1c1e21));
     g.fillEllipse (rx, ry, rw, rw);
 
-    // Outline (Rack Frame style)
-    g.setColour (juce::Colour (0xff353b42).withAlpha(0.3f));
-    g.drawEllipse (rx, ry, rw, rw, 2.0f);
+    // Subtle Gradient for Depth
+    juce::ColourGradient grad (juce::Colour (0xff2d3436).withAlpha(0.1f), centreX, centreY, 
+                               juce::Colour (0xff000000).withAlpha(0.3f), rx, ry, true);
+    g.setGradientFill (grad);
+    g.fillEllipse (rx, ry, rw, rw);
 
-    // Pointer (Golden Precision)
+    // Pointer (Golden Precision - High Tech Glow)
+    auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    auto pLen = radius * 0.8f;
+    auto pThick = 2.5f;
+    
+    g.setColour (juce::Colour (0xffd4af37)); // Elite Gold
     juce::Path p;
-    auto pointerLength = radius * 0.7f;
-    auto pointerThickness = 3.0f;
-    p.addRectangle (-pointerThickness * 0.5f, -radius, pointerThickness, pointerLength);
-    p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
-    g.setColour (juce::Colour (0xffd4af37));
-    g.fillPath (p);
+    p.addRoundedRectangle(-pThick*0.5f, -radius, pThick, pLen, 1.0f);
+    p.applyTransform(juce::AffineTransform::rotation(angle).translated(centreX, centreY));
+    g.fillPath(p);
 }
 
 // ==============================================================================
@@ -47,15 +51,15 @@ NADAAudioProcessorEditor::NADAAudioProcessorEditor (NADAAudioProcessor& p)
 {
     setLookAndFeel(&lnf);
 
-    setupControl(masterGain, "LIMITER_THRESH", "GAIN (DB)");
-    setupControl(saturation, "SAT_DRIVE", "SATURATION");
-    setupControl(compression, "1176_THR", "COMPRESSION");
-    setupControl(eqHigh, "EQ_BAND_5_GAIN", "EQ HIGH");
-    setupControl(eqLow, "EQ_BAND_1_GAIN", "EQ LOW");
-    setupControl(reverbMix, "REVERB_MIX", "REVERB");
-    setupControl(delayMix, "DELAY_MIX", "DELAY");
+    setupControl(masterGain, "LIMITER_THRESH", "MASTER GAIN");
+    setupControl(saturation, "SAT_DRIVE", "HG-2 DRIVE");
+    setupControl(compression, "1176_THR", "1176 THR");
+    setupControl(eqHigh, "EQ_BAND_5_GAIN", "PULTEC HIGH");
+    setupControl(eqLow, "EQ_BAND_1_GAIN", "PULTEC LOW");
+    setupControl(reverbMix, "REVERB_MIX", "BUS REVERB");
+    setupControl(delayMix, "DELAY_MIX", "H-DELAY");
 
-    statusLabel.setText("NATIVE UI // AI READY // STEREO FIXED", juce::dontSendNotification);
+    statusLabel.setText("NADA BOSS // ELITE SERIES // READY", juce::dontSendNotification);
     statusLabel.setJustificationType(juce::Justification::centred);
     statusLabel.setColour(juce::Label::textColourId, juce::Colour(0xffd4af37));
     addAndMakeVisible(statusLabel);

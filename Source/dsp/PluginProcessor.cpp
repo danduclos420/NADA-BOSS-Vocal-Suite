@@ -55,6 +55,13 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
+    // --- GLOBAL BYPASS ---
+    if (audioProcessor.getActiveEditor() == nullptr || apvts.getRawParameterValue("BYPASS") != nullptr) {
+        if (auto* p = apvts.getRawParameterValue("BYPASS")) {
+            if (p->load() > 0.5f) return;
+        }
+    }
+
     // --- 1. CAPTURE DATA FOR AI ---
     auto* inL = buffer.getReadPointer(0);
     for (int i=0; i<buffer.getNumSamples(); ++i) {
@@ -173,12 +180,13 @@ void NADAAudioProcessor::updateDSPChain()
         float q = apvts.getRawParameterValue(prefix + "Q")->load();
         int type = (int)apvts.getRawParameterValue(prefix + "TYPE")->load();
         
-        if (type == 0) // Low Cut
-            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighPass(mSampleRate, f, q);
-        else if (type == 1) // Bell
-            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g));
-        else // High Cut
-            *eq6.bands[i].coefficients = *juce::dsp::IIR::Coefficients<float>::makeLowPass(mSampleRate, f, q);
+        // Only update if parameters actually changed (optimization)
+        auto newCoeffs = (type == 0) ? juce::dsp::IIR::Coefficients<float>::makeHighPass(mSampleRate, f, q) :
+                        (type == 1) ? juce::dsp::IIR::Coefficients<float>::makePeakFilter(mSampleRate, f, q, juce::Decibels::decibelsToGain(g)) :
+                                      juce::dsp::IIR::Coefficients<float>::makeLowPass(mSampleRate, f, q);
+        
+        if (newCoeffs != nullptr)
+            *eq6.bands[i].coefficients = *newCoeffs;
     }
 
     // 3. 1176 Coefficients
@@ -229,21 +237,24 @@ void NADAAudioProcessor::runSpectralAnalysis()
     // Example: If low energy is > target, reduce EQ Band 2 (Mud)
     if (lastAnalysis.lowEnergy > 0.5f) {
         if (auto* p = apvts.getParameter("EQ_BAND_2_GAIN"))
-            p->setValueNotifyingHost((float)(juce::Decibels::gainToDecibels(0.7f) / 12.0));
+            p->setValueNotifyingHost(0.35f); // Normalized value (around -6dB)
     }
 
     // Example: If sibilance is high, increase De-esser Range
     if (lastAnalysis.highEnergy > 0.4f) {
         if (auto* p = apvts.getParameter("DEESSER_RANGE"))
-            p->setValueNotifyingHost(0.8f);
+            p->setValueNotifyingHost(0.7f);
     }
 
-    // Normalize Output to -10 LUFS
-    float targetLUFS = -10.0f;
+    // Normalize Output to -14 LUFS (Standard)
+    float targetLUFS = -14.0f;
     float currentLUFS = (float)juce::Decibels::gainToDecibels((double)outputLevel.load());
     float makeup = targetLUFS - currentLUFS;
+    
+    // Map -24..0 range to 0..1 normalized
+    float normalizedMakeup = (makeup + 24.0f) / 24.0f; 
     if (auto* p = apvts.getParameter("LIMITER_THRESH"))
-        p->setValueNotifyingHost((float)std::clamp((double)makeup / 24.0, 0.0, 1.0));
+        p->setValueNotifyingHost(std::clamp(normalizedMakeup, 0.0f, 1.0f));
 
     analysisRequested = false;
 }
