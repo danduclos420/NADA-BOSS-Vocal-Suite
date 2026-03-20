@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap');
+
+:root {
+  --bg-deep: #0e0f12;
+  --bg-panel: #181a1f;
+  --bg-module: #1f2228;
+  --bg-glow: #2a2c32;
+  --neon-red: #ff3c3c;
+  --neon-glow: 0 0 15px rgba(255, 60, 60, 0.5);
+  --gold: #ffd700;
+  --text-primary: #d5d7e0;
+  --text-secondary: #666;
+  --text-value: #ff3c3c;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* RACK CHASSIS */
+.rack-canvas {
+  width: 1610px;
+  height: 900px;
+  background: linear-gradient(to bottom, var(--bg-panel), var(--bg-deep));
+  padding: 24px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 24px;
+  position: relative;
+  box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+}
+
+.rack-canvas::before {
+  content: "";
+  position: absolute; top:0; left:0; width:100%; height:100%;
+  background-image: url("https://www.transparenttextures.com/patterns/brushed-alum.png");
+  opacity: 0.05; pointer-events: none;
+}
+
+/* COLUMNS */
+.rack-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-right: 1px solid var(--bg-glow);
+  padding-right: 12px;
+}
+.rack-column:last-child { border-right: none; }
+
+/* MODULE CARD - THE RELIEF */
+.module-card {
+  background: var(--bg-module);
+  border-radius: 4px;
+  border: 1px solid #111;
+  padding: 16px;
+  position: relative;
+  box-shadow: 
+    inset 2px 2px 4px rgba(0,0,0,0.8),
+    inset -1px -1px 1px rgba(255,255,255,0.05),
+    0 10px 30px rgba(0,0,0,0.6);
+  border-bottom: 2px solid #000;
+  border-right: 2px solid #000;
+}
+
+.module-card h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2.5px;
+  color: #444;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  border-bottom: 1px solid #222;
+  padding-bottom: 4px;
+}
+
+/* SCREWS */
+.screw {
+  position: absolute; width: 8px; height: 8px;
+  background: radial-gradient(circle at 30% 30%, #444, #111);
+  border-radius: 50%; box-shadow: 1px 1px 2px #000;
+}
+.screw.tl { top: 8px; left: 8px; }
+.screw.tr { top: 8px; right: 8px; }
+.screw.bl { bottom: 8px; left: 8px; }
+.screw.br { bottom: 8px; right: 8px; }
+
+/* KNOB COMPONENT - ANISOTROPIC */
+.knob-outer {
+  width: 70px; height: 70px;
+  background: 
+    conic-gradient(from 0deg, #111, #444 15deg, #111 30deg, #444 45deg, #111 60deg, #444 75deg, #111 90deg, #444 105deg, #111 120deg, #444 135deg, #111 150deg, #444 165deg, #111 180deg, #444 195deg, #111 210deg, #444 225deg, #111 240deg, #444 255deg, #111 270deg, #444 285deg, #111 300deg, #444 315deg, #111 330deg, #444 345deg, #111),
+    radial-gradient(circle at center, #333, #000);
+  border-radius: 50%;
+  border: 4px solid #000;
+  position: relative;
+  box-shadow: 0 10px 20px #000, 0 0 0 1px #222;
+}
+
+.knob-inner-cap {
+  position: absolute; width: 30%; height: 30%; background: #000; border-radius: 50%; box-shadow: 0 0 5px rgba(255,255,255,0.1);
+}
+
+.knob-outer.big { width: 100px; height: 100px; }
+.knob-outer.small { width: 40px; height: 40px; border-width: 2px; }
+
+/* LED METER */
+.meter-v {
+  width: 12px; height: 100px;
+  background: #000; border: 1px solid #222;
+  display: flex; flex-direction: column-reverse; gap: 2px; padding: 2px;
+}
+.led { width: 100%; height: 4px; background: #200; border-radius: 1px; }
+.led.on { background: var(--neon-red); box-shadow: var(--neon-glow); }
