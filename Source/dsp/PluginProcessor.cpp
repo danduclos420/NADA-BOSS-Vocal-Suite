@@ -58,7 +58,6 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     updateDSPChain();
 
     // --- 3. HARVEST PARAMETERS (Atomic loads once per block) ---
-    float speed = apvts.getRawParameterValue("AUTOTUNE_SPEED")->load();
     float userPitch = apvts.getRawParameterValue("AUTOTUNE_PITCH")->load();
     float fetThr = apvts.getRawParameterValue("FET_THRESH")->load();
     float fetRat = apvts.getRawParameterValue("FET_RATIO")->load();
@@ -66,9 +65,8 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     float satDrv = apvts.getRawParameterValue("SAT_DRIVE")->load();
     float rvoxComp = apvts.getRawParameterValue("RVOX_COMP")->load();
     float dsRange = apvts.getRawParameterValue("DEESSER_RANGE")->load();
-    float stWidth = apvts.getRawParameterValue("STEREO_WIDTH")->load();
-
-    juce::ignoreUnused(speed, stWidth);
+    float widthValue = apvts.getRawParameterValue("STEREO_WIDTH")->load();
+    juce::ignoreUnused(widthValue);
 
     // 1. Pitch (Crispytuner)
     float pitchRatio = std::pow(2.0f, userPitch / 12.0f);
