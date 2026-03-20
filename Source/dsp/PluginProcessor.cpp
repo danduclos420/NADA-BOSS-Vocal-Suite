@@ -67,7 +67,6 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     float rvoxComp = apvts.getRawParameterValue("RVOX_COMP")->load();
     float dsRange = apvts.getRawParameterValue("DEESSER_RANGE")->load();
     float widthValue = apvts.getRawParameterValue("STEREO_WIDTH")->load();
-    juce::ignoreUnused(widthValue);
 
     // 1. Pitch (Crispytuner)
     float pitchRatio = std::pow(2.0f, userPitch / 12.0f);
@@ -116,7 +115,7 @@ void NADAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (int i=0; i<4; ++i) ssl.bands[i].process(context);
 
     // 10. Stereo Width
-    stereomaker.process(buffer, apvts.getRawParameterValue("STEREO_WIDTH")->load(), 100.0f);
+    stereomaker.process(buffer, widthValue, 100.0f);
 
     // 11. Limiter
     limiter.process(context);

@@ -1,4 +1,8 @@
 #pragma once
+#define JUCE_USE_WIN_WEBVIEW2 1
+#define JUCE_VST3_CAN_REPLACE_VST2 0
+#define JUCE_IGNORE_VST3_MISMATCHED_PARAMETER_ID_WARNING 1
+
 #include <JuceHeader.h>
 #include <vector>
 #include <complex>
