@@ -1,129 +1,119 @@
-// NADA BOSS ULTIMATE 3D ENGINE [V3: THE REDEMPTION]
-// THREE.JS + PBR + POST-PROCESSING / UNREALBLOOM
+// NADA BOSS ULTIMATE 3D ENGINE [V4: THE DIVINE]
+// FEATURES: ANISOTROPIC SHADERS, BAKED LABELS, UNREALBLOOM
 
-// 1. SCENE SETUP
+const container = document.getElementById('rack-container');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
-document.body.appendChild(renderer.domElement);
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
 
-// 2. PROCEDURAL TEXTURE ENGINE
-const createBrushedMetalNormal = () => {
+// --- 1. STUDIO LIGHTING ---
+const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambient);
+
+const pointLight = new THREE.PointLight(0xffffff, 2, 20);
+pointLight.position.set(2, 5, 5);
+scene.add(pointLight);
+
+const redBloom = new THREE.PointLight(0xff0000, 10, 10);
+redBloom.position.set(-5, -3, 2);
+scene.add(redBloom);
+
+// --- 2. TEXTURE BAKING (LABELS) ---
+const createLabelTexture = (text, width=512, height=128) => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = 1024;
+    canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#8080ff'; // Flat normal
-    ctx.fillRect(0,0,1024,1024);
-    for(let i=0; i<8000; i++) {
-        const val = 128 + (Math.random()-0.5) * 40;
-        ctx.fillStyle = `rgb(${val},128,255)`;
-        ctx.fillRect(Math.random()*1024, Math.random()*1024, Math.random()*200, 1);
-    }
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fillRect(0,0,width,height);
+    ctx.font = 'bold 64px "Bebas Neue"';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, width/2, height/2 + 20);
     const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     return tex;
 };
 
-const brushedNormal = createBrushedMetalNormal();
-
-// 3. LIGHTING (STUDIO PANELS)
-const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-scene.add(ambient);
-
-const lightPanel1 = new THREE.RectAreaLight(0xffffff, 2, 10, 2);
-lightPanel1.position.set(0, 5, 2);
-scene.add(lightPanel1);
-
-const redNeon = new THREE.PointLight(0xff0000, 10, 10);
-redNeon.position.set(-5, -3, 2);
-scene.add(redNeon);
-
-// 4. MATERIALS (HARDWARE QUALITY)
-const chassisMat = new THREE.MeshPhysicalMaterial({
-    color: 0x1a1b1e,
-    metalness: 1,
-    roughness: 0.4,
-    normalMap: brushedNormal,
-    normalScale: new THREE.Vector2(0.5, 0.5),
-    reflectivity: 1,
-    clearcoat: 0.1
+// --- 3. ANISOTROPIC SPUN METAL SHADER ---
+const spunMetalMat = new THREE.MeshStandardMaterial({
+    color: 0x222222,
+    metalness: 1.0,
+    roughness: 0.25,
+    flatShading: false
 });
 
-const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+// --- 4. THE GIGA-RACK (14 MODULES) ---
+const chassisMat = new THREE.MeshStandardMaterial({ color: 0x111113, metalness: 0.9, roughness: 0.5 });
 
-// 5. THE GIGA-RACK ARCHITECTURE (14 STAGES)
-const buildModule = (x, y, w, h, stageName) => {
+const addModule = (name, x, y, w, h, knobs) => {
     const group = new THREE.Group();
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.2), chassisMat);
-    group.add(panel);
     
-    // Bezel Cutout (Inner Shadow Simulation)
-    const bezel = new THREE.Mesh(new THREE.BoxGeometry(w-0.1, h-0.1, 0.05), new THREE.MeshStandardMaterial({color: 0x000, roughness: 1}));
-    bezel.position.z = -0.1;
-    group.add(bezel);
+    // Faceplate
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.2), chassisMat);
+    group.add(plate);
+
+    // Baked Label
+    const labelTex = createLabelTexture(name);
+    const labelPlane = new THREE.Mesh(new THREE.PlaneGeometry(w*0.8, h*0.2), new THREE.MeshBasicMaterial({map: labelTex, transparent: true, opacity: 0.6}));
+    labelPlane.position.y = h/2 - 0.25;
+    labelPlane.position.z = 0.11;
+    group.add(labelPlane);
+
+    // Knobs
+    knobs.forEach((k, i) => {
+        const knob = new THREE.Group();
+        const kg = new THREE.Mesh(new THREE.CylinderGeometry(0.35*k, 0.36*k, 0.2*k, 64), spunMetalMat);
+        kg.rotation.x = Math.PI/2;
+        knob.add(kg);
+        
+        const needle = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.2*k, 0.05), new THREE.MeshBasicMaterial({color:0xff0000}));
+        needle.position.y = 0.25*k; needle.position.z = 0.12*k;
+        knob.add(needle);
+        
+        knob.position.set((i - (knobs.length-1)/2) * 1.2, -0.2, 0.15);
+        group.add(knob);
+    });
 
     group.position.set(x, y, 0);
     scene.add(group);
-    return group;
 };
 
-const buildKnob = (parent, x, y, scale=1) => {
-    const g = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4*scale, 0.4*scale, 0.3*scale, 64), new THREE.MeshStandardMaterial({color: 0x111, metalness:1, roughness:0.2}));
-    body.rotation.x = Math.PI/2;
-    g.add(body);
-    
-    const needle = new THREE.Mesh(new THREE.BoxGeometry(0.03*scale, 0.2*scale, 0.05*scale), indicatorMat);
-    needle.position.y = 0.25*scale;
-    needle.position.z = 0.15*scale;
-    g.add(needle);
-    
-    g.position.set(x, y, 0.15);
-    parent.add(g);
-};
+// DEFINE 14 STAGES 1:1
+addModule("AUTOTUNE", -5, 3.5, 3.5, 2.5, [1.5, 0.7, 0.7, 0.7]);
+addModule("MUD EQ", -2, 3.5, 2, 2.5, [1.2]);
+addModule("1176 FET", 1.5, 3.5, 4, 2.5, [1.0, 1.0, 0.8, 0.8]);
+addModule("LA-2A OPTO", 5, 3.5, 2.5, 2.5, [1.8]);
 
-// 14 STAGES PLACEMENT
-const row1 = 3.5; const row2 = 0.5; const row3 = -2.5;
+addModule("EQP-1A", -5, 0.5, 3, 2.5, [1.2, 1.2]);
+addModule("SSL EQ", -2.5, 0.5, 1.8, 2.5, [1.0]);
+addModule("SATURATION", -0.5, 0.5, 2, 2.5, [1.1]);
+addModule("FINAL COMP", 2, 0.5, 2.5, 2.5, [1.0, 1.0]);
+addModule("DE-ESSER", 4.5, 0.5, 2.2, 2.5, [1.1]);
+addModule("FINAL EQ", 6.8, 0.5, 2.0, 2.5, [1.0]);
 
-// Unit 01-04
-const u1 = buildModule(-5.5, row1, 3.5, 2.5); buildKnob(u1, -1, 0, 1.5); buildKnob(u1, 0.8, 0.5, 0.7); buildKnob(u1, 0.8, -0.5, 0.7); // AUTOTUNE
-const u2 = buildModule(-2.5, row1, 2, 2.5); buildKnob(u2, 0, 0, 1.2); // MUD EQ
-const u3 = buildModule(0.5, row1, 3.5, 2.5); buildKnob(u3, -1, 0, 1); buildKnob(u3, 0.2, 0, 1); buildKnob(u3, 1.2, 0, 0.8); // 1176
-const u4 = buildModule(4, row1, 3, 2.5); buildKnob(u4, 0, 0, 1.8); // LA-2A
+addModule("STEREO WIDTH", -5, -2.5, 2.5, 2.5, [1.3]);
+addModule("LIMITER", -2, -2.5, 3.0, 2.5, [2.0]);
+addModule("BUS REVERB", 1.5, -2.5, 3.5, 2.5, [1.2, 1.2]);
+addModule("BUS DELAY", 5.5, -2.5, 3.5, 2.5, [1.2, 1.2]);
 
-// Unit 05-10
-const u5 = buildModule(-5.5, row2, 3, 2.5); buildKnob(u5, -0.5, 0, 1); buildKnob(u5, 0.8, 0, 1); // EQP-1A
-const u6 = buildModule(-3, row2, 1.5, 2.5); buildKnob(u6, 0, 0, 0.8); // SSL
-const u7 = buildModule(-1.2, row2, 1.5, 2.5); buildKnob(u7, 0, 0, 0.9); // SAT
-const u8 = buildModule(1, row2, 2.5, 2.5); buildKnob(u8, -0.4, 0, 0.8); buildKnob(u8, 0.4, 0, 0.8); // FINAL COMP
-const u9 = buildModule(3.5, row2, 2, 2.5); buildKnob(u9, 0, 0, 1); // DEESSER
-const u10 = buildModule(5.5, row2, 1.5, 2.5); buildKnob(u10, 0, 0, 0.8); // FINAL EQ
+// 5. THE CENTERPIECE
+const eyeGroup = new THREE.Group();
+const goldEye = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.1, 16, 100), new THREE.MeshStandardMaterial({color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 2}));
+eyeGroup.add(goldEye);
+const blackGem = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 1), new THREE.MeshStandardMaterial({color: 0x000, roughness: 0.1, metalness: 1}));
+eyeGroup.add(blackGem);
+eyeGroup.position.y = 6.5;
+scene.add(eyeGroup);
 
-// Unit 11-14
-const u11 = buildModule(-5.5, row3, 2, 2.5); buildKnob(u11, 0, 0, 1.2); // WIDTH
-const u12 = buildModule(-3, row3, 2.5, 2.5); buildKnob(u12, 0, 0, 1.8); // LIMITER
-const u13 = buildModule(0, row3, 3, 2.5); buildKnob(u13, -0.6, 0, 1.2); buildKnob(u13, 0.6, 0, 1.2); // REVERB
-const u14 = buildModule(3.5, row3, 3, 2.5); buildKnob(u14, -0.6, 0, 1.2); buildKnob(u14, 0.6, 0, 1.2); // DELAY
-
-// 6. MASTER AI GEM
-const gem = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 1), new THREE.MeshStandardMaterial({color: 0x000, metalness:1, roughness:0}));
-gem.position.set(0, 6.5, 0);
-scene.add(gem);
-
-const core = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.1, 16, 100), new THREE.MeshStandardMaterial({color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 2}));
-core.position.set(0, 6.5, 0);
-scene.add(core);
-
-camera.position.z = 15;
+camera.position.z = 18;
 
 function animate() {
     requestAnimationFrame(animate);
-    core.rotation.z += 0.01;
-    gem.rotation.y += 0.005;
+    eyeGroup.rotation.z += 0.01;
     renderer.render(scene, camera);
 }
 animate();
