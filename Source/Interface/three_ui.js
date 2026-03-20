@@ -1,167 +1,141 @@
-// NADA BOSS ULTIMATE 3D ENGINE [PHASE 20: REDEMPTION]
-// THREE.JS + PBR MATERIALS + BLOOM POST-PROCESSING
+// NADA BOSS ULTIMATE 3D ENGINE [V2]
+// PHOTOREALISTIC HARDWARE RENDERING FOR 14 STAGES
 
 const container = document.getElementById('rack-container');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.shadowMap.enabled = true;
 container.appendChild(renderer.domElement);
 
-// LIGHTING: THE STUDIO SETUP
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-scene.add(ambientLight);
+// --- PROCEDURAL TEXTURE GENERATOR ---
+const generateMetalMap = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0,0,1024,1024);
+    for(let i=0; i<5000; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.05})`;
+        ctx.fillRect(Math.random()*1024, Math.random()*1024, Math.random()*100, 1);
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+};
 
-const spotLight = new THREE.SpotLight(0xffffff, 2);
-spotLight.position.set(5, 10, 7);
-spotLight.angle = 0.5;
-spotLight.penumbra = 1;
-spotLight.decay = 2;
-spotLight.distance = 200;
-scene.add(spotLight);
+const metalTex = generateMetalMap();
 
-const redVibe = new THREE.PointLight(0xff3c3c, 5, 20);
-redVibe.position.set(-5, -3, 2);
-scene.add(redVibe);
+// --- LIGHTING ---
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambient);
 
-// PBR MATERIALS (PHYSICALLY BASED)
-const metalMaterial = new THREE.MeshStandardMaterial({
-    color: 0x1a1a1c,
-    metalness: 1,
-    roughness: 0.3,
-    roughnessMap: null // Will simulate with procedural noise later if needed
-});
+const topDown = new THREE.DirectionalLight(0xffffff, 2);
+topDown.position.set(0, 5, 2);
+topDown.castShadow = true;
+scene.add(topDown);
 
-const knobMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111111,
+const redBacklight = new THREE.PointLight(0xff1111, 20, 15);
+redBacklight.position.set(-5, -2, 3);
+scene.add(redBacklight);
+
+// --- MATERIALS ---
+const chassisMat = new THREE.MeshStandardMaterial({
+    color: 0x151618,
     metalness: 0.9,
-    roughness: 0.2
+    roughness: 0.4,
+    bumpMap: metalTex,
+    bumpScale: 0.005
 });
 
-const goldEmissive = new THREE.MeshStandardMaterial({
-    color: 0xffd700,
+const knobMat = new THREE.MeshStandardMaterial({
+    color: 0x111111,
     metalness: 1,
-    roughness: 0.1,
-    emissive: 0xffd700,
-    emissiveIntensity: 1.2
+    roughness: 0.2,
+    envMapIntensity: 1
 });
 
-// GEOMETRY HELPERS
-const createModuleUnit = (x, y, w, h, name) => {
-    const group = new THREE.Group();
+// --- RACK SYSTEM ---
+// Create Chassis
+const chassisGeom = new THREE.BoxGeometry(18, 10, 0.5);
+const chassis = new THREE.Mesh(chassisGeom, chassisMat);
+chassis.receiveShadow = true;
+scene.add(chassis);
+
+// Rack Ears
+const createEar = (x) => {
+    const ear = new THREE.Mesh(new THREE.BoxGeometry(1.5, 10, 0.6), chassisMat);
+    ear.position.x = x;
+    scene.add(ear);
     
-    // Sunken Panel (The Relief)
-    const panelGeom = new THREE.BoxGeometry(w, h, 0.1);
-    const panel = new THREE.Mesh(panelGeom, metalMaterial);
-    group.add(panel);
-
-    // Bezel Border
-    const borderGeom = new THREE.BoxGeometry(w + 0.1, h + 0.1, 0.05);
-    const border = new THREE.Mesh(borderGeom, new THREE.MeshStandardMaterial({ color: 0x000, roughness: 0.5 }));
-    border.position.z = -0.04;
-    group.add(border);
-
-    group.position.set(x, y, 0);
-    scene.add(group);
-    return group;
+    // Bolts
+    for(let y of [-4, 0, 4]) {
+        const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16), new THREE.MeshStandardMaterial({color: 0x444, metalness:1}));
+        bolt.rotation.x = Math.PI / 2;
+        bolt.position.set(x, y, 0.35);
+        scene.add(bolt);
+    }
 };
+createEar(-9.5);
+createEar(9.5);
 
-const createKnob3D = (parent, x, y, scale = 1) => {
-    const knobGroup = new THREE.Group();
+// Modules (14 Stages)
+const stages = [
+    { n: "AUTOTUNE", x: -6, y: 3, ks: [1.2, 0.6, 0.6] },
+    { n: "MUD EQ", x: -2.5, y: 3, ks: [1] },
+    { n: "1176 FET", x: 1, y: 3, ks: [0.8, 0.8, 0.6] },
+    { n: "LA-2A OPTO", x: 4.5, y: 3, ks: [1.5] },
     
-    // Knob Body
-    const bodyGeom = new THREE.CylinderGeometry(0.5 * scale, 0.52 * scale, 0.3 * scale, 64);
-    const body = new THREE.Mesh(bodyGeom, knobMaterial);
-    body.rotation.x = Math.PI / 2;
-    knobGroup.add(body);
+    { n: "EQP-1A", x: -6, y: 0, ks: [0.8, 0.8] },
+    { n: "SSL CONSOLE", x: -3.5, y: 0, ks: [0.6] },
+    { n: "SATURATION", x: -1.5, y: 0, ks: [0.7] },
+    { n: "FINAL COMP", x: 1, y: 0, ks: [0.8, 0.8] },
+    { n: "DE-ESSER", x: 4, y: 0, ks: [0.8] },
+    { n: "FINAL EQ", x: 6, y: 0, ks: [0.7] },
+    
+    { n: "WIDTH", x: -6, y: -3, ks: [1] },
+    { n: "LIMITER", x: -3, y: -3, ks: [1.5] },
+    { n: "REVERB", x: 1, y: -3, ks: [1, 1] },
+    { n: "DELAY", x: 5, y: -3, ks: [1, 1] }
+];
 
-    // Red Indicator (Glow)
-    const indGeom = new THREE.BoxGeometry(0.04 * scale, 0.2 * scale, 0.05 * scale);
-    const indMat = new THREE.MeshBasicMaterial({ color: 0xff3c3c });
-    const indicator = new THREE.Mesh(indGeom, indMat);
-    indicator.position.y = 0.25 * scale;
-    indicator.position.z = 0.15 * scale;
-    knobGroup.add(indicator);
+stages.forEach(s => {
+    s.ks.forEach((sc, i) => {
+        const group = new THREE.Group();
+        const kGeom = new THREE.CylinderGeometry(0.4*sc, 0.42*sc, 0.25*sc, 32);
+        const k = new THREE.Mesh(kGeom, knobMat);
+        k.rotation.x = Math.PI / 2;
+        group.add(k);
+        
+        const indPos = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.2*sc, 0.05*sc), new THREE.MeshBasicMaterial({color: 0xff0000}));
+        indPos.position.y = 0.3 * sc;
+        indPos.position.z = 0.15 * sc;
+        group.add(indPos);
+        
+        group.position.set(s.x + (i*1.2), s.y, 0.3);
+        group.castShadow = true;
+        scene.add(group);
+    });
+});
 
-    knobGroup.position.set(x, y, 0.1);
-    parent.add(knobGroup);
-    return knobGroup;
-};
+// AI BRAIN GIGA-LIGHT
+const brain = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), new THREE.MeshStandardMaterial({color: 0x000, roughness:0, metalness:1}));
+brain.position.y = 6;
+scene.add(brain);
 
-// --- BUILDING THE 14-STAGE GIGA RACK ---
-// 1. AUTOTUNE
-const autotune = createModuleUnit(-5, 3.5, 4, 2.5, "AUTOTUNE");
-createKnob3D(autotune, -1, 0, 1.5); // Main Pitch
-createKnob3D(autotune, 1, 0.5, 0.8); // Speed
-createKnob3D(autotune, 1, -0.5, 0.8); // Tune
+const halo = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.1, 16, 100), new THREE.MeshStandardMaterial({color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 2}));
+halo.position.y = 6;
+scene.add(halo);
 
-// 2. MUD EQ
-const mudEq = createModuleUnit(-1.5, 3.5, 2, 2.5, "MUD EQ");
-createKnob3D(mudEq, 0, 0, 1.2);
-
-// 3. 1176 FET
-const fet = createModuleUnit(2, 3.5, 4, 2.5, "1176 FET");
-createKnob3D(fet, -1.2, 0, 1);
-createKnob3D(fet, 0, 0, 1);
-createKnob3D(fet, 1.2, 0, 1);
-
-// 4. LA-2A OPTO
-const opto = createModuleUnit(5.5, 3.5, 2.5, 2.5, "LA-2A");
-createKnob3D(opto, 0, 0, 1.8);
-
-// MID ROW (5-10)
-const eqp = createModuleUnit(-5, 0.5, 3, 2.5, "EQP-1A");
-createKnob3D(eqp, -0.6, 0, 1); createKnob3D(eqp, 0.6, 0, 1);
-
-const ssl = createModuleUnit(-2.2, 0.5, 1.8, 2.5, "SSL");
-createKnob3D(ssl, 0, 0, 0.9);
-
-const sat = createModuleUnit(-0.2, 0.5, 1.8, 2.5, "SAT");
-createKnob3D(sat, 0, 0, 1);
-
-const finalComp = createModuleUnit(2, 0.5, 2.2, 2.5, "FINAL COMP");
-createKnob3D(finalComp, -0.4, 0, 0.8); createKnob3D(finalComp, 0.4, 0, 0.8);
-
-const deesser = createModuleUnit(4.5, 0.5, 2.2, 2.5, "DEESSER");
-createKnob3D(deesser, 0, 0, 1);
-
-const finalEq = createModuleUnit(7, 0.5, 1.8, 2.5, "FINAL EQ");
-createKnob3D(finalEq, 0, 0, 1);
-
-// BOTTOM ROW (11-14)
-const width = createModuleUnit(-5, -2.5, 2, 2.5, "WIDTH");
-createKnob3D(width, 0, 0, 1.2);
-
-const limiter = createModuleUnit(-2.5, -2.5, 2.5, 2.5, "LIMITER");
-createKnob3D(limiter, 0, 0, 1.8);
-
-const reverb = createModuleUnit(0.5, -2.5, 2.5, 2.5, "REVERB");
-createKnob3D(reverb, -0.5, 0, 1); createKnob3D(reverb, 0.5, 0, 1);
-
-const delay = createModuleUnit(3.5, -2.5, 2.5, 2.5, "DELAY");
-createKnob3D(delay, -0.5, 0, 1); createKnob3D(delay, 0.5, 0, 1);
-
-// THE MASTER AI BRAIN (TOP CENTER)
-const brainCore = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.15, 32, 100), goldEmissive);
-brainCore.position.y = 6.5;
-scene.add(brainCore);
-
-const brainSphere = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), new THREE.MeshStandardMaterial({ color: 0x000, metalness: 1, roughness: 0.1 }));
-brainSphere.position.y = 6.5;
-scene.add(brainSphere);
-
-camera.position.z = 15;
+camera.position.set(0, 0, 18);
 
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Subtle float
-    brainCore.rotation.z += 0.01;
-    brainCore.scale.setScalar(1 + Math.sin(Date.now() * 0.002) * 0.05);
-
+    halo.rotation.z += 0.01;
     renderer.render(scene, camera);
 }
 animate();
